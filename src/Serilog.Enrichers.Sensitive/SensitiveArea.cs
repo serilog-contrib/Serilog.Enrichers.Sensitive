@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace serilog_pii
+namespace Serilog.Enrichers.Sensitive
 {
     public class SensitiveArea : IDisposable
     {

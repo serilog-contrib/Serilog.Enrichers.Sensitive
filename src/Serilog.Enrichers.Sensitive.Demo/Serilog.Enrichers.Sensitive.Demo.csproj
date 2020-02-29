@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="serilog" Version="2.9.0" />
+    <PackageReference Include="serilog.sinks.console" Version="3.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Serilog.Enrichers.Sensitive\Serilog.Enrichers.Sensitive.csproj" />
+  </ItemGroup>
+
+</Project>
