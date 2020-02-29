@@ -1,0 +1,29 @@
+version: '1.0.{build}'
+image: Visual Studio 2017
+branches:
+  only:
+  - master
+skip_tags: true
+init:
+  # Good practise, because Windows line endings are different from Unix/Linux ones
+  - cmd: git config --global core.autocrlf true
+before_build:
+  - cmd: dotnet --version
+  - cmd: dotnet restore --verbosity m
+build_script:
+  - cmd: dotnet publish ./src/Serilog.Enrichers.Sensitive/Serilog.Enrichers.Sensitive.csproj
+  - cmd: dotnet pack ./src/Serilog.Enrichers.Sensitive/Serilog.Enrichers.Sensitive.csproj
+after_build:
+  # For once the build has completed
+clone_depth: 1
+test_script:
+  - cmd: dotnet test ./test/Serilog.Sinks.InMemory.Tests.Unit/Serilog.Sinks.InMemory.Tests.Unit.csproj
+artifacts:
+  - path: '**/*.nupkg'
+deploy:
+  provider: NuGet
+  api_key:
+    secure: JVvkE2Z56VuY7H3qYhH/IuQ9oUuhJYTNLvijV8yxIe54OEP+I1HZLpycRkVH9kTl
+  skip_symbols: false
+  symbol_server:           # remove to push symbols to SymbolSource.org
+  artifact: /.*\.nupkg/
