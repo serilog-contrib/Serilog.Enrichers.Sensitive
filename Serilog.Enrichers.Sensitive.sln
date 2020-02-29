@@ -9,6 +9,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Enrichers.Sensitive
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serilog.Enrichers.Sensitive.Demo", "src\Serilog.Enrichers.Sensitive.Demo\Serilog.Enrichers.Sensitive.Demo.csproj", "{86680D69-63DF-4211-845D-7C45DAB92A36}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{5953C623-05D9-4967-A65B-01AD83955946}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serilog.Enrichers.Sensitive.Tests.Unit", "test\Serilog.Enrichers.Sensitive.Tests.Unit\Serilog.Enrichers.Sensitive.Tests.Unit.csproj", "{8784B51D-900B-44E5-A032-CEF6027CD178}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +47,18 @@ Global
 		{86680D69-63DF-4211-845D-7C45DAB92A36}.Release|x64.Build.0 = Release|Any CPU
 		{86680D69-63DF-4211-845D-7C45DAB92A36}.Release|x86.ActiveCfg = Release|Any CPU
 		{86680D69-63DF-4211-845D-7C45DAB92A36}.Release|x86.Build.0 = Release|Any CPU
+		{8784B51D-900B-44E5-A032-CEF6027CD178}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8784B51D-900B-44E5-A032-CEF6027CD178}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8784B51D-900B-44E5-A032-CEF6027CD178}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8784B51D-900B-44E5-A032-CEF6027CD178}.Debug|x64.Build.0 = Debug|Any CPU
+		{8784B51D-900B-44E5-A032-CEF6027CD178}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8784B51D-900B-44E5-A032-CEF6027CD178}.Debug|x86.Build.0 = Debug|Any CPU
+		{8784B51D-900B-44E5-A032-CEF6027CD178}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8784B51D-900B-44E5-A032-CEF6027CD178}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8784B51D-900B-44E5-A032-CEF6027CD178}.Release|x64.ActiveCfg = Release|Any CPU
+		{8784B51D-900B-44E5-A032-CEF6027CD178}.Release|x64.Build.0 = Release|Any CPU
+		{8784B51D-900B-44E5-A032-CEF6027CD178}.Release|x86.ActiveCfg = Release|Any CPU
+		{8784B51D-900B-44E5-A032-CEF6027CD178}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -50,6 +66,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{24D87D92-F2C9-449A-80F3-CD90AF105D26} = {4F6C5943-A8FF-4625-97ED-5325B9CAF2E4}
 		{86680D69-63DF-4211-845D-7C45DAB92A36} = {4F6C5943-A8FF-4625-97ED-5325B9CAF2E4}
+		{8784B51D-900B-44E5-A032-CEF6027CD178} = {5953C623-05D9-4967-A65B-01AD83955946}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E5198D5F-2EF2-411D-8569-3E473CFFB6B7}
