@@ -17,7 +17,7 @@ after_build:
   # For once the build has completed
 clone_depth: 1
 test_script:
-  - cmd: dotnet test ./test/Serilog.Sinks.InMemory.Tests.Unit/Serilog.Sinks.InMemory.Tests.Unit.csproj
+  - cmd: dotnet test ./test/Serilog.Enrichers.Sensitive.Tests.Unit/Serilog.Enrichers.Sensitive.Tests.Unit.csproj
 artifacts:
   - path: '**/*.nupkg'
 deploy:
