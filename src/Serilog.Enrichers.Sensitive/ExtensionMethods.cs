@@ -13,10 +13,16 @@ namespace Serilog.Enrichers.Sensitive
             return sensitiveArea;
         }
 
-        public static LoggerConfiguration WithSensitiveDataMasking(this LoggerEnrichmentConfiguration loggerConfiguration, bool maskDataGlobally = false)
+        public static LoggerConfiguration WithSensitiveDataMasking(this LoggerEnrichmentConfiguration loggerConfiguration)
         {
             return loggerConfiguration
-                .With(new SensitiveDataEnricher(maskDataGlobally));
+                .With(new SensitiveDataEnricher());
+        }
+
+        public static LoggerConfiguration WithSensitiveDataMaskingInArea(this LoggerEnrichmentConfiguration loggerConfiguration)
+        {
+            return loggerConfiguration
+                .With(new SensitiveDataEnricher(MaskingMode.InArea));
         }
     }
 }

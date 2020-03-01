@@ -9,7 +9,7 @@ namespace Serilog.Enrichers.Sensitive
 {
     internal class SensitiveDataEnricher : ILogEventEnricher
     {
-        private readonly bool _maskDataGlobally;
+        private readonly MaskingMode _maskingMode;
         private static readonly Regex EmailReplaceRegex = new Regex("(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])");
         private static readonly Regex IbanReplaceRegex = new Regex("[a-zA-Z]{2}[0-9]{2}[a-zA-Z0-9]{4}[0-9]{7}([a-zA-Z0-9]?){0,16}");
         private const string MaskValue = "***MASKED***";
@@ -17,9 +17,9 @@ namespace Serilog.Enrichers.Sensitive
         private static readonly MessageTemplateParser Parser = new MessageTemplateParser();
         private readonly FieldInfo _messageTemplateBackingField;
 
-        public SensitiveDataEnricher(bool maskDataGlobally = false)
+        public SensitiveDataEnricher(MaskingMode maskingMode = MaskingMode.Globally)
         {
-            _maskDataGlobally = maskDataGlobally;
+            _maskingMode = maskingMode;
 
             var fields = typeof(LogEvent).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -28,7 +28,7 @@ namespace Serilog.Enrichers.Sensitive
 
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
-            if (_maskDataGlobally || SensitiveArea.Instance != null)
+            if (_maskingMode == MaskingMode.Globally|| SensitiveArea.Instance != null)
             {
                 var messageTemplateText = ReplaceSensitiveDataFromString(logEvent.MessageTemplate.Text);
 
@@ -58,5 +58,11 @@ namespace Serilog.Enrichers.Sensitive
 
             return messageTemplateText;
         }
+    }
+
+    public enum MaskingMode
+    {
+        Globally,
+        InArea
     }
 }

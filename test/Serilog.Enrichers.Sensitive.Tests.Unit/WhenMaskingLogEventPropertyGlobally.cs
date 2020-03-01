@@ -4,26 +4,32 @@ using Xunit;
 
 namespace Serilog.Enrichers.Sensitive.Tests.Unit
 {
-    public class WhenMaskingTheMessageTemplate
+    public class WhenMaskingLogEventPropertyGlobally
     {
         [Fact]
         public void GivenNotInSensitiveArea_EmailAddressIsNotMasked()
         {
-            _logger.Information("test@email.com");
+            _logger.Information("{Prop}","test@email.com");
 
             InMemorySink.Instance
                 .Should()
-                .HaveMessage("test@email.com");
+                .HaveMessage("{Prop}")
+                .Appearing().Once()
+                .WithProperty("Prop")
+                .WithValue("***MASKED***");
         }
 
         [Fact]
         public void GivenNotInSensitiveArea_IbanIsNotMasked()
         {
-            _logger.Information("NL02ABNA0123456789");
+            _logger.Information("{Prop}", "NL02ABNA0123456789");
 
             InMemorySink.Instance
                 .Should()
-                .HaveMessage("NL02ABNA0123456789");
+                .HaveMessage("{Prop}")
+                .Appearing().Once()
+                .WithProperty("Prop")
+                .WithValue("***MASKED***");
         }
 
         [Fact]
@@ -31,12 +37,15 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         {
             using (_logger.EnterSensitiveArea())
             {
-                _logger.Information("test@email.com");
+                _logger.Information("{Prop}", "test@email.com");
             }
 
             InMemorySink.Instance
                 .Should()
-                .HaveMessage("***MASKED***");
+                .HaveMessage("{Prop}")
+                .Appearing().Once()
+                .WithProperty("Prop")
+                .WithValue("***MASKED***");
         }
 
         [Fact]
@@ -44,17 +53,20 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         {
             using (_logger.EnterSensitiveArea())
             {
-                _logger.Information("NL02ABNA0123456789");
+                _logger.Information("{Prop}", "NL02ABNA0123456789");
             }
 
             InMemorySink.Instance
                 .Should()
-                .HaveMessage("***MASKED***");
+                .HaveMessage("{Prop}")
+                .Appearing().Once()
+                .WithProperty("Prop")
+                .WithValue("***MASKED***");
         }
 
         private readonly ILogger _logger;
 
-        public WhenMaskingTheMessageTemplate()
+        public WhenMaskingLogEventPropertyGlobally()
         {
             _logger = new LoggerConfiguration()
                 .Enrich.WithSensitiveDataMasking()
