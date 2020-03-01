@@ -28,23 +28,20 @@ namespace Serilog.Enrichers.Sensitive
 
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
-            if (_maskingMode == MaskingMode.Globally|| SensitiveArea.Instance != null)
+            if (_maskingMode == MaskingMode.Globally || SensitiveArea.Instance != null)
             {
                 var messageTemplateText = ReplaceSensitiveDataFromString(logEvent.MessageTemplate.Text);
 
                 _messageTemplateBackingField.SetValue(logEvent, Parser.Parse(messageTemplateText));
-                
+
                 foreach (var property in logEvent.Properties)
                 {
-                    if (property.Value is ScalarValue scalar)
+                    if (property.Value is ScalarValue scalar && scalar.Value is string stringValue)
                     {
-                        if (scalar.Value is string stringValue)
-                        {
-                            logEvent.AddOrUpdateProperty(
-                                new LogEventProperty(
-                                    property.Key,
-                                    new ScalarValue(ReplaceSensitiveDataFromString(stringValue))));
-                        }
+                        logEvent.AddOrUpdateProperty(
+                            new LogEventProperty(
+                                property.Key,
+                                new ScalarValue(ReplaceSensitiveDataFromString(stringValue))));
                     }
                 }
             }
