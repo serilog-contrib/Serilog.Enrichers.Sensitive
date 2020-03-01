@@ -16,7 +16,7 @@ namespace Serilog.Enrichers.Sensitive
         private readonly FieldInfo _messageTemplateBackingField;
         private readonly List<IMaskingOperator> _maskingOperators;
 
-        public SensitiveDataEnricher(MaskingMode maskingMode = MaskingMode.Globally)
+        public SensitiveDataEnricher(MaskingMode maskingMode, IEnumerable<IMaskingOperator> maskingOperators)
         {
             _maskingMode = maskingMode;
 
@@ -24,11 +24,7 @@ namespace Serilog.Enrichers.Sensitive
 
             _messageTemplateBackingField = fields.SingleOrDefault(f => f.Name.Contains("<MessageTemplate>"));
 
-            _maskingOperators = new List<IMaskingOperator>
-            {
-                new EmailAddressMaskingOperator(),
-                new IbanMaskingOperator()
-            };
+            _maskingOperators = maskingOperators.ToList();
         }
 
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
@@ -66,6 +62,13 @@ namespace Serilog.Enrichers.Sensitive
 
             return input;
         }
+
+        public static IEnumerable<IMaskingOperator> DefaultOperators => new List<IMaskingOperator>
+        {
+            new EmailAddressMaskingOperator(),
+            new IbanMaskingOperator()
+        };
+
     }
 
     public enum MaskingMode
