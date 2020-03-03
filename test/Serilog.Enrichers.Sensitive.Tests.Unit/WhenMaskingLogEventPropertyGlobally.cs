@@ -64,6 +64,30 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
                 .WithValue("***MASKED***");
         }
 
+        [Fact]
+        public void GivenMultiplePropertiesToMask_AllPropertiesAreMasked()
+        {
+            _logger.Information("{PropA}, {PropB}, {PropC}", "foo@bar.net", "foo@bar.net", "foo@bar.nets");
+
+            InMemorySink.Instance
+                .Should()
+                .HaveMessage("{PropA}, {PropB}, {PropC}")
+                .Appearing().Once()
+                .WithProperty("PropA").WithValue("***MASKED***");
+
+            InMemorySink.Instance
+                .Should()
+                .HaveMessage("{PropA}, {PropB}, {PropC}")
+                .Appearing().Once()
+                .WithProperty("PropB").WithValue("***MASKED***");
+
+            InMemorySink.Instance
+                .Should()
+                .HaveMessage("{PropA}, {PropB}, {PropC}")
+                .Appearing().Once()
+                .WithProperty("PropC").WithValue("***MASKED***");
+        }
+
         private readonly ILogger _logger;
 
         public WhenMaskingLogEventPropertyGlobally()

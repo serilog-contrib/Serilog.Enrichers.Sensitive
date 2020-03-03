@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Serilog.Core;
@@ -35,15 +37,31 @@ namespace Serilog.Enrichers.Sensitive
 
                 _messageTemplateBackingField.SetValue(logEvent, Parser.Parse(messageTemplateText));
 
-                foreach (var property in logEvent.Properties)
+                try
                 {
-                    if (property.Value is ScalarValue scalar && scalar.Value is string stringValue)
+                    foreach (var property in logEvent.Properties.ToList())
                     {
-                        logEvent.AddOrUpdateProperty(
-                            new LogEventProperty(
-                                property.Key,
-                                new ScalarValue(ReplaceSensitiveDataFromString(stringValue))));
+                        try
+                        {
+                            if (property.Value is ScalarValue scalar && scalar.Value is string stringValue)
+                            {
+                                logEvent.AddOrUpdateProperty(
+                                    new LogEventProperty(
+                                        property.Key,
+                                        new ScalarValue(ReplaceSensitiveDataFromString(stringValue))));
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Debugger.Break();
+                            throw e;
+                        }
                     }
+                }
+                catch (Exception e)
+                {
+                    Debugger.Break();
+                    throw e;
                 }
             }
         }
