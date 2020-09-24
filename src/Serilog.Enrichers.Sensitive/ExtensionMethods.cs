@@ -1,4 +1,5 @@
-﻿using Serilog.Configuration;
+﻿using System.Collections.Generic;
+using Serilog.Configuration;
 
 namespace Serilog.Enrichers.Sensitive
 {
@@ -15,14 +16,20 @@ namespace Serilog.Enrichers.Sensitive
 
         public static LoggerConfiguration WithSensitiveDataMasking(this LoggerEnrichmentConfiguration loggerConfiguration)
         {
-            return loggerConfiguration
-                .With(new SensitiveDataEnricher(MaskingMode.Globally, SensitiveDataEnricher.DefaultOperators));
+            return loggerConfiguration.WithSensitiveDataMasking(MaskingMode.Globally, SensitiveDataEnricher.DefaultOperators);
         }
 
         public static LoggerConfiguration WithSensitiveDataMaskingInArea(this LoggerEnrichmentConfiguration loggerConfiguration)
         {
-            return loggerConfiguration
-                .With(new SensitiveDataEnricher(MaskingMode.InArea, SensitiveDataEnricher.DefaultOperators));
+	        return loggerConfiguration.WithSensitiveDataMasking(MaskingMode.InArea, SensitiveDataEnricher.DefaultOperators);
+        }
+
+        public static LoggerConfiguration WithSensitiveDataMasking(
+	        this LoggerEnrichmentConfiguration loggerConfiguration, MaskingMode mode,
+	        IEnumerable<IMaskingOperator> operators)
+        {
+	        return loggerConfiguration
+		        .With(new SensitiveDataEnricher(mode, operators));
         }
     }
 }

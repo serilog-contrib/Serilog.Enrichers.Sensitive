@@ -84,7 +84,8 @@ namespace Serilog.Enrichers.Sensitive
         public static IEnumerable<IMaskingOperator> DefaultOperators => new List<IMaskingOperator>
         {
             new EmailAddressMaskingOperator(),
-            new IbanMaskingOperator()
+            new IbanMaskingOperator(),
+            new CreditCardMaskingOperator()
         };
 
     }
