@@ -11,7 +11,7 @@ namespace Serilog.Enrichers.Sensitive.Demo
 		{
 			var logger = new LoggerConfiguration()
 				//.Enrich.WithSensitiveDataMasking()
-				.Enrich.WithSensitiveDataMaskingInArea()
+				.Enrich.WithSensitiveDataMasking(MaskingMode.InArea, new [] {new CreditCardMaskingOperator(false) })
 				.WriteTo.Console()
 				.CreateLogger();
 
