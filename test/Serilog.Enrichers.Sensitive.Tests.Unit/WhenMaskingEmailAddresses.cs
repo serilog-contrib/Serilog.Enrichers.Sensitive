@@ -55,6 +55,62 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
 
         private const string Mask = "***MASK***";
 
+        [Theory]
+        [InlineData("email@example.com")]
+        [InlineData(@"firstname.lastname@example.com")]
+        [InlineData(@"email@subdomain.example.com")]
+        [InlineData(@"firstname+lastname@example.com")]
+        [InlineData(@"email@123.123.123.123")]
+        [InlineData(@"email@[123.123.123.123]")]
+        [InlineData(@"""email""@example.com")]
+        [InlineData(@"1234567890@example.com")]
+        [InlineData(@"email@example-one.com")]
+        [InlineData(@"_______@example.com")]
+        [InlineData(@"email@example.name")]
+        [InlineData(@"email@example.museum")]
+        [InlineData(@"email@example.co.jp")]
+        [InlineData(@"firstname-lastname@example.com")]
+        public void GivenValidEmailAddress_AddressIsMasked(string email)
+        {
+	        TheMaskedResultOf(email)
+		        .Should()
+		        .Be(Mask);
+        }
+
+        [Theory]
+        [InlineData("PlainAddress")]
+        [InlineData("#@%^%#$@#$@#.com")]
+        [InlineData("@example.com")]
+        [InlineData("email.example.com")]
+        [InlineData("email.@example.com")]
+        [InlineData("あいうえお@example.com")]
+        [InlineData("email@example")]
+        [InlineData("email@-example.com")]
+        [InlineData("email@example..com")]
+        [InlineData("(),:;<>[\\]@example.com")]
+        public void GivenInvalidEmailAddress_StringIsNotMasked(string toTest)
+        {
+	        TheMaskedResultOf(toTest)
+		        .Should()
+		        .Be(toTest);
+        }
+
+        [Theory]
+        [InlineData(".email@example.com", ".{0}")]
+        [InlineData("Abc..123@example.com", "Abc..{0}")]
+        [InlineData("Joe Smith <email@example.com>", "Joe Smith <{0}>")]
+        [InlineData("email..email@example.com", "email..{0}")]
+        [InlineData("email@example.com (Joe Smith)", "{0} (Joe Smith)")]
+        [InlineData("email@example@example.com", "email@{0}")]
+        [InlineData("just”not”right@example.com", "just”not”{0}")]
+        [InlineData("this\\ is\"really\"not\\allowed@example.com", "this\\ is\"really\"not\\{0}")]
+        public void GivenInvalidEmailAddress_StringIsStillMasked(string toTest, string expectedMask)
+        {
+	        TheMaskedResultOf(toTest)
+		        .Should()
+		        .Be(string.Format(expectedMask, Mask));
+        }
+
         private static string TheMaskedResultOf(string input)
         {
             var maskingResult = new EmailAddressMaskingOperator().Mask(input, Mask);
