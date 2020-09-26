@@ -9,37 +9,34 @@ namespace Serilog.Enrichers.Sensitive
 	{
 		private readonly Regex _regex;
 		private readonly string _replacementPattern;
-		private Func<string, string> _onBeforeMask;
 
-		public RegexMaskingOperator(Regex regex) : this(regex, "{0}", s => s)
+		public RegexMaskingOperator(Regex regex) : this(regex, "{0}")
 		{
 		}
 
-		public RegexMaskingOperator(Regex regex, Func<string, string> onBeforeMask) : this(regex, "{0}", onBeforeMask)
-		{
-		}
-
-		public RegexMaskingOperator(Regex regex, string replacementPattern) : this(regex, replacementPattern, s => s)
-		{
-		}
-
-		public RegexMaskingOperator(Regex regex, string replacementPattern, Func<string, string> onBeforeMask)
+		public RegexMaskingOperator(Regex regex, string replacementPattern)
 		{
 			_regex = regex ?? throw new ArgumentNullException(nameof(regex));
 			_replacementPattern = replacementPattern ?? throw new ArgumentNullException(nameof(replacementPattern));
-			_onBeforeMask = onBeforeMask ?? throw new ArgumentNullException(nameof(onBeforeMask));
 		}
 
-		public event EventHandler<IMaskingOperatorArgs> BeforeMask;
+		public event EventHandler<BeforeMaskingArgs> BeforeMask;
+		public event EventHandler<AfterMaskingArgs> AfterMask;
 
 		public virtual MaskingResult Mask(string input, string mask)
 		{
-			input = _onBeforeMask(input);
-			return new MaskingResult
+			var beforeArgs = new BeforeMaskingArgs {ValueToMask = input};
+			BeforeMask?.Invoke(this, beforeArgs);
+			if (beforeArgs.Cancel) return MaskingResult.NoMatch;
+			var result = new MaskingResult
 			{
-				Result = _regex.Replace(input, string.Format(_replacementPattern, mask)),
-				Match = _regex.IsMatch(input)
+				Result = _regex.Replace(beforeArgs.ValueToMask, string.Format(_replacementPattern, mask)),
+				Match = _regex.IsMatch(beforeArgs.ValueToMask)
 			};
+			var afterArgs = new AfterMaskingArgs {MaskedValue = result.Result};
+			AfterMask?.Invoke(this, afterArgs);
+			result.Result = afterArgs.MaskedValue;
+			return result;
 		}
 	}
 }
