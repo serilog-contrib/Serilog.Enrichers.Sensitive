@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Serilog.Core;
 
@@ -9,8 +10,12 @@ namespace Serilog.Enrichers.Sensitive.Demo
 		static async Task Main(string[] args)
 		{
 			var logger = new LoggerConfiguration()
-				//.Enrich.WithSensitiveDataMasking()
-				.Enrich.WithSensitiveDataMasking(MaskingMode.InArea, new [] {new CreditCardMaskingOperator(false) })
+				.Enrich.WithSensitiveDataMasking(MaskingMode.InArea, new IMaskingOperator[]
+				{
+					new EmailAddressMaskingOperator(),
+					new IbanMaskingOperator(),
+					new CreditCardMaskingOperator(false)
+				})
 				.WriteTo.Console()
 				.CreateLogger();
 
