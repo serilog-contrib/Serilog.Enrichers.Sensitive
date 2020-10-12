@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Serilog.Enrichers.Sensitive
+﻿namespace Serilog.Enrichers.Sensitive
 {
 
 	public interface IMaskingOperator

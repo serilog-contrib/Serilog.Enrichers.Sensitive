@@ -4,12 +4,12 @@ using BenchmarkDotNet.Running;
 
 namespace Serilog.Enrichers.Sensitive.Tests.Benchmark
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main()
         {
-            var summary = BenchmarkRunner.Run<BenchmarkCompiledRegex>();
-            var ccSummary = BenchmarkRunner.Run<CreditCardMarkingBenchmarks>();
+            BenchmarkRunner.Run<BenchmarkCompiledRegex>();
+            BenchmarkRunner.Run<CreditCardMarkingBenchmarks>();
         }
     }
 
