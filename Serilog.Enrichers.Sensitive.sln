@@ -13,7 +13,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{5953C623-0
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Enrichers.Sensitive.Tests.Unit", "test\Serilog.Enrichers.Sensitive.Tests.Unit\Serilog.Enrichers.Sensitive.Tests.Unit.csproj", "{8784B51D-900B-44E5-A032-CEF6027CD178}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Serilog.Enrichers.Sensitive.Tests.Benchmark", "test\Serilog.Enrichers.Sensitive.Tests.Benchmark\Serilog.Enrichers.Sensitive.Tests.Benchmark.csproj", "{1C6B2313-3EBB-482F-8A78-2BB7C6FCFA06}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Serilog.Enrichers.Sensitive.Tests.Benchmark", "test\Serilog.Enrichers.Sensitive.Tests.Benchmark\Serilog.Enrichers.Sensitive.Tests.Benchmark.csproj", "{1C6B2313-3EBB-482F-8A78-2BB7C6FCFA06}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
