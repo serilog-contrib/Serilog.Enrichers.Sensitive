@@ -54,14 +54,14 @@ namespace Serilog.Enrichers.Sensitive
                         catch (Exception e)
                         {
                             Debugger.Break();
-                            throw e;
+                            throw;
                         }
                     }
                 }
                 catch (Exception e)
                 {
                     Debugger.Break();
-                    throw e;
+                    throw;
                 }
             }
         }
