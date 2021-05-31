@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Serilog.Core;
@@ -37,38 +35,22 @@ namespace Serilog.Enrichers.Sensitive
 
                 _messageTemplateBackingField.SetValue(logEvent, Parser.Parse(messageTemplateText));
 
-                try
+                foreach (var property in logEvent.Properties.ToList())
                 {
-                    foreach (var property in logEvent.Properties.ToList())
+                    if (property.Value is ScalarValue scalar && scalar.Value is string stringValue)
                     {
-                        try
-                        {
-                            if (property.Value is ScalarValue scalar && scalar.Value is string stringValue)
-                            {
-                                logEvent.AddOrUpdateProperty(
-                                    new LogEventProperty(
-                                        property.Key,
-                                        new ScalarValue(ReplaceSensitiveDataFromString(stringValue))));
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            Debugger.Break();
-                            throw e;
-                        }
+                        logEvent.AddOrUpdateProperty(
+                            new LogEventProperty(
+                                property.Key,
+                                new ScalarValue(ReplaceSensitiveDataFromString(stringValue))));
                     }
-                }
-                catch (Exception e)
-                {
-                    Debugger.Break();
-                    throw e;
                 }
             }
         }
 
         private string ReplaceSensitiveDataFromString(string input)
         {
-            foreach(var maskingOperator in _maskingOperators)
+            foreach (var maskingOperator in _maskingOperators)
             {
                 var maskResult = maskingOperator.Mask(input, MaskValue);
 
