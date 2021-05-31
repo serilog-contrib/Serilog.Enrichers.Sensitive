@@ -1,5 +1,7 @@
 # Serilog.Enrichers.Sensitive
 
+[![Build status](https://ci.appveyor.com/api/projects/status/1anco6pj0oovbs54?svg=true)](https://ci.appveyor.com/project/sandermvanvliet/serilog-enrichers-sensitive) [![NuGet Serilog.Enrichers.Sensitive](https://buildstats.info/nuget/Serilog.Enrichers.Sensitive)](https://www.nuget.org/packages/Serilog.Enrichers.Sensitive/)
+
 This is a Serilog enricher that can mask sensitive data from a `LogEvent` message template and its properties. Currently this supports e-mail addresses and IBAN numbers but could easily be extended to other types of data.
 
 There are two ways of using this enricher:
