@@ -1,0 +1,8 @@
+# Changelog for Serilog.Enrichers.Sensitive
+
+## 1.0.0
+
+- Removed a number of try/catch blocks that only existed for debugging
+- Updated copyright notices
+- Bumped version
+- Cleaned up README
