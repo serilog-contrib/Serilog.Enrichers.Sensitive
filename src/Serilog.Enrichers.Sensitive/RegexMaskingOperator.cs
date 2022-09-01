@@ -28,7 +28,7 @@ namespace Serilog.Enrichers.Sensitive
 				return MaskingResult.NoMatch;
 			}
 
-			var maskedResult = _regex.Replace(preprocessedInput, PreprocessMask(mask));
+			var maskedResult = _regex.Replace(preprocessedInput, MatchEvaluator(_regex, mask));
 			var result = new MaskingResult
 			{
 				Result = maskedResult,
@@ -36,6 +36,11 @@ namespace Serilog.Enrichers.Sensitive
 			};
 
 			return result;
+		}
+		
+		protected virtual MatchEvaluator MatchEvaluator(Regex regex, string mask)
+		{
+			return (Match match) => { return regex.Replace(match.value, PreprocessMask(mask)); }
 		}
 
 		protected virtual bool ShouldMaskInput(string input) => true;
