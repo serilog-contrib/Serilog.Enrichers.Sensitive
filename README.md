@@ -101,7 +101,7 @@ In case the default mask value `***MASKED***` is not what you want, you can supp
 
 ```csharp
 var logger = new LoggerConfiguration()
-    .Enrich.WithSensitiveDataMasking(mask: "**")
+    .Enrich.WithSensitiveDataMasking(options => options.MaskValue = "**")
     .WriteTo.Console()
     .CreateLogger();
 ```
@@ -111,6 +111,27 @@ A example rendered message would then look like:
 `This is a sensitive value: **`
 
 You can specify any mask string as long as it's non-null or an empty string.
+
+## Always mask a property
+
+It may be that you always want to mask the value of a property regardless of whether it matches a pattern for any of the masking operators. In that case you can specify that the property is always masked:
+
+```csharp
+var logger = new LoggerConfiguration()
+    .Enrich.WithSensitiveDataMasking(options => options.MaskProperties.Add("email"))
+    .WriteTo.Console()
+    .CreateLogger();
+```
+
+> **Note:** The property names are treated case-insensitive. If you specify `EMAIL` and the property name is `eMaIL` it will still be masked.
+
+When you log any message with an `email` property it will be masked:
+
+```csharp
+logger.Information("This is a sensitive {Email}", "this doesn't match the regex at all");
+```
+
+the rendered log message comes out as: `"This is a sensitive ***MASKED***"`
 
 ## Extending to additional use cases
 

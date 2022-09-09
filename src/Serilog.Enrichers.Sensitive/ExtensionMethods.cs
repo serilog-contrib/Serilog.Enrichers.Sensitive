@@ -43,5 +43,13 @@ namespace Serilog.Enrichers.Sensitive
 	        return loggerConfiguration
 		        .With(new SensitiveDataEnricher(mode, operators, mask));
         }
+
+        public static LoggerConfiguration WithSensitiveDataMasking(
+            this LoggerEnrichmentConfiguration loggerConfiguration, 
+            Action<SensitiveDataEnricherOptions> options)
+        {
+            return loggerConfiguration
+                .With(new SensitiveDataEnricher(options));
+        }
     }
 }

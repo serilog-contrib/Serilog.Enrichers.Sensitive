@@ -2,7 +2,8 @@
 
 ## 1.1.0
 
-- Add support to supply a custom mask value
+- Add support to supply a custom mask value [#6](https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/issues/6)
+- Add support to always mask a property regardless of value [#7](https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/issues/7)
 
 ## 1.0.0
 

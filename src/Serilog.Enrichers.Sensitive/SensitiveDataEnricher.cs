@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Parsing;
@@ -17,23 +18,45 @@ namespace Serilog.Enrichers.Sensitive
         private readonly FieldInfo _messageTemplateBackingField;
         private readonly List<IMaskingOperator> _maskingOperators;
         private readonly string _maskValue;
+        private readonly List<string> _maskProperties;
 
-        public SensitiveDataEnricher(MaskingMode maskingMode, IEnumerable<IMaskingOperator> maskingOperators,
-            string mask = DefaultMaskValue)
+        public SensitiveDataEnricher(
+            Action<SensitiveDataEnricherOptions> options)
         {
-            if (string.IsNullOrEmpty(mask))
+            var enricherOptions = new SensitiveDataEnricherOptions();
+
+            if (options != null)
             {
-                throw new ArgumentNullException(nameof(mask), "The mask must be a non-empty string");
+                options(enricherOptions);
             }
 
-            _maskingMode = maskingMode;
-            _maskValue = mask;
+            if (string.IsNullOrEmpty(enricherOptions.MaskValue))
+            {
+                throw new ArgumentNullException("mask", "The mask must be a non-empty string");
+            }
+            
+            _maskingMode = enricherOptions.Mode;
+            _maskValue = enricherOptions.MaskValue;
+            _maskProperties = enricherOptions.MaskProperties ?? new List<string>();
 
             var fields = typeof(LogEvent).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
 
             _messageTemplateBackingField = fields.SingleOrDefault(f => f.Name.Contains("<MessageTemplate>"));
 
-            _maskingOperators = maskingOperators.ToList();
+            _maskingOperators = enricherOptions.MaskingOperators.ToList();
+        }
+
+        public SensitiveDataEnricher(
+            MaskingMode maskingMode, 
+            IEnumerable<IMaskingOperator> maskingOperators,
+            string mask = DefaultMaskValue)
+        : this(options =>
+        {
+            options.MaskValue = mask;
+            options.Mode = maskingMode;
+            options.MaskingOperators = maskingOperators.ToList();
+        })
+        {
         }
 
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
@@ -46,7 +69,14 @@ namespace Serilog.Enrichers.Sensitive
 
                 foreach (var property in logEvent.Properties.ToList())
                 {
-                    if (property.Value is ScalarValue scalar && scalar.Value is string stringValue)
+                    if (_maskProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
+                    {
+                        logEvent.AddOrUpdateProperty(
+                            new LogEventProperty(
+                                property.Key,
+                                new ScalarValue(_maskValue)));
+                    }
+                    else if (property.Value is ScalarValue scalar && scalar.Value is string stringValue)
                     {
                         logEvent.AddOrUpdateProperty(
                             new LogEventProperty(
