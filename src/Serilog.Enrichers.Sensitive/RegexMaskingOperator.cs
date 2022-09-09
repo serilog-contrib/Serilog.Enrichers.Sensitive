@@ -40,7 +40,7 @@ namespace Serilog.Enrichers.Sensitive
 		
 		protected virtual MatchEvaluator MatchEvaluator(Regex regex, string mask)
 		{
-			return (Match match) => { return regex.Replace(match.value, PreprocessMask(mask)); }
+			return (Match match) => { return regex.Replace(match.Value, PreprocessMask(mask)); }
 		}
 
 		protected virtual bool ShouldMaskInput(string input) => true;
