@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Serilog.Core;
@@ -10,15 +11,23 @@ namespace Serilog.Enrichers.Sensitive
     internal class SensitiveDataEnricher : ILogEventEnricher
     {
         private readonly MaskingMode _maskingMode;
-        private const string MaskValue = "***MASKED***";
+        public const string DefaultMaskValue = "***MASKED***";
 
         private static readonly MessageTemplateParser Parser = new MessageTemplateParser();
         private readonly FieldInfo _messageTemplateBackingField;
         private readonly List<IMaskingOperator> _maskingOperators;
+        private readonly string _maskValue;
 
-        public SensitiveDataEnricher(MaskingMode maskingMode, IEnumerable<IMaskingOperator> maskingOperators)
+        public SensitiveDataEnricher(MaskingMode maskingMode, IEnumerable<IMaskingOperator> maskingOperators,
+            string mask = DefaultMaskValue)
         {
+            if (string.IsNullOrEmpty(mask))
+            {
+                throw new ArgumentNullException(nameof(mask), "The mask must be a non-empty string");
+            }
+
             _maskingMode = maskingMode;
+            _maskValue = mask;
 
             var fields = typeof(LogEvent).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -52,7 +61,7 @@ namespace Serilog.Enrichers.Sensitive
         {
             foreach (var maskingOperator in _maskingOperators)
             {
-                var maskResult = maskingOperator.Mask(input, MaskValue);
+                var maskResult = maskingOperator.Mask(input, _maskValue);
 
                 if (maskResult.Match)
                 {

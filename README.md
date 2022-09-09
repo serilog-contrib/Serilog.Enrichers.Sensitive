@@ -95,6 +95,23 @@ The effect is that the log message will be rendered as:
 
 See the [Serilog.Enrichers.Sensitive.Demo](src/Serilog.Enrichers.Sensitive.Demo/Program.cs) app for a code example of the above.
 
+## Using a custom mask value
+
+In case the default mask value `***MASKED***` is not what you want, you can supply your own mask value:
+
+```csharp
+var logger = new LoggerConfiguration()
+    .Enrich.WithSensitiveDataMasking(mask: "**")
+    .WriteTo.Console()
+    .CreateLogger();
+```
+
+A example rendered message would then look like:
+
+`This is a sensitive value: **`
+
+You can specify any mask string as long as it's non-null or an empty string.
+
 ## Extending to additional use cases
 
 Extending this enricher is a fairly straight forward process.
