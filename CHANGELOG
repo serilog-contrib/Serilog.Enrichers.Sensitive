@@ -1,5 +1,9 @@
 # Changelog for Serilog.Enrichers.Sensitive
 
+## 1.2.0
+
+- Add `ShouldMaskMatch` to the `RegexMaskingOperator` to allow implementors to perform further checks on the sensitive value in order to decide whether or not to perform masking
+
 ## 1.1.0
 
 - Add support to supply a custom mask value [#6](https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/issues/6)

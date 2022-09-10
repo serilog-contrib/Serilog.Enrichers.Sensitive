@@ -135,23 +135,24 @@ the rendered log message comes out as: `"This is a sensitive ***MASKED***"`
 
 ## Extending to additional use cases
 
-Extending this enricher is a fairly straight forward process.
+Depending on the type of masking operation you want to perform, the `RegexMaskingOperator` base class is most likely your best starting point. It provides a number of extension points:
 
-1. Create your new class and inherit from the RegexMaskingOperator base class
-    1. Pass your regex pattern to the base constructor
-    2. To control if the regex replacement should even take place, override ShouldMaskInput, returning `true` if the mask should be applied, and `false` if it should not.
-    3. Override PreprocessInput if your use case requires adjusting the input string before the regex match is applied.
-    4. Override PreprocessMask if your use case requires adjusting the mask that is applied (for instance, if your regex includes named groups).  See the [CreditCardMaskingOperator](src/Serilog.Enrichers.Sensitive/CreditCardMaskingOperator.cs) for an example.
-2. When configuring your logger, pass your new encricher in the collection of masking operators
+| Method | Purpose |
+|--------|---------|
+| ShouldMaskInput | Indicate whether the operator should continue with masking the input |
+| PreprocessInput | Perform any operations on the input value before masking the input |
+| PreprocessMask | Perform any operations on the mask before masking the matched value | 
+| ShouldMaskMatch | Indicate whether the operator should continue with masking the matched value from the input | 
+
+To implement your own masking operator, inherit from `RegexMaskingOperator`, supply the regex through the base constructor and where necessary override any of the above extension points.
+
+Then, when configuring your logger, pass your new encricher in the collection of masking operators:
 
 ```csharp
 var logger = new LoggerConfiguration()
-    .Enrich.WithSensitiveDataMasking(MaskingMode.InArea, new IMaskingOperator[]
-    {
-        new EmailAddressMaskingOperator(),
-        new IbanMaskingOperator(),
-        new CreditCardMaskingOperator(false),
-        new YourMaskingOperator()
+    .Enrich.WithSensitiveDataMasking(options => {
+        // Add your masking operator:
+        options.MaskingOperators.Add(new YourMaskingOperator());
     })
     .WriteTo.Console()
     .CreateLogger();
