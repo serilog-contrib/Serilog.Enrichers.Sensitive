@@ -23,5 +23,13 @@ namespace Serilog.Enrichers.Sensitive
         /// </summary>
         /// <remarks>The property name is case-insensitive, when the property is present on the log message it will always be masked even if it is empty</remarks>
         public List<string> MaskProperties { get; set; } = new List<string>();
+        /// <summary>
+        /// The list of properties that should never be masked
+        /// </summary>
+        /// <remarks>
+        /// <para>The property name is case-insensitive, when the property is present on the log message it will always be masked even if it is empty.</para>
+        /// <para>This property takes precedence over <see cref="MaskProperties"/> and the masking operators.</para>
+        /// </remarks>
+        public List<string> ExcludeProperties { get; set; } = new List<string>();
     }
 }

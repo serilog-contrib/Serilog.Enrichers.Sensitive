@@ -133,6 +133,28 @@ logger.Information("This is a sensitive {Email}", "this doesn't match the regex 
 
 the rendered log message comes out as: `"This is a sensitive ***MASKED***"`
 
+## Never mask a property
+
+It may be that you never want to mask the value of a property regardless of whether it matches a pattern for any of the masking operators. In that case you can specify that the property is never masked:
+
+```csharp
+var logger = new LoggerConfiguration()
+    .Enrich.WithSensitiveDataMasking(options => options.ExcludeProperties.Add("email"))
+    .WriteTo.Console()
+    .CreateLogger();
+```
+
+> **Note:** The property names are treated case-insensitive. If you specify `EMAIL` and the property name is `eMaIL` it will still be excluded.
+
+When you log any message with an `email` property it will not be masked:
+
+```csharp
+logger.Information("This is a sensitive {Email}", "user@example.com");
+```
+
+the rendered log message comes out as: `"This is a sensitive user@example.com"`
+
+
 ## Extending to additional use cases
 
 Depending on the type of masking operation you want to perform, the `RegexMaskingOperator` base class is most likely your best starting point. It provides a number of extension points:

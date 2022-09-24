@@ -19,6 +19,7 @@ namespace Serilog.Enrichers.Sensitive
         private readonly List<IMaskingOperator> _maskingOperators;
         private readonly string _maskValue;
         private readonly List<string> _maskProperties;
+        private readonly List<string> _excludeProperties;
 
         public SensitiveDataEnricher(
             Action<SensitiveDataEnricherOptions> options)
@@ -38,6 +39,7 @@ namespace Serilog.Enrichers.Sensitive
             _maskingMode = enricherOptions.Mode;
             _maskValue = enricherOptions.MaskValue;
             _maskProperties = enricherOptions.MaskProperties ?? new List<string>();
+            _excludeProperties = enricherOptions.ExcludeProperties ?? new List<string>();
 
             var fields = typeof(LogEvent).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
 
@@ -69,6 +71,11 @@ namespace Serilog.Enrichers.Sensitive
 
                 foreach (var property in logEvent.Properties.ToList())
                 {
+                    if (_excludeProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
+                    {
+                        continue;
+                    }
+
                     if (_maskProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
                     {
                         logEvent.AddOrUpdateProperty(

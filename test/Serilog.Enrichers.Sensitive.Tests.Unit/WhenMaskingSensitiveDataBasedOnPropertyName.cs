@@ -53,5 +53,54 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
                 .WithProperty("email")
                 .WithValue("***MASKED***");
         }
+
+        [Fact]
+        public void GivenLogMessageHasSpecificPropertyAndPropertyIsExcluded_PropertyValueIsNotMasked()
+        {
+            var inMemorySink = new InMemorySink();
+
+            var logger =  new LoggerConfiguration()
+                .Enrich.WithSensitiveDataMasking(options =>
+                {
+                    options.ExcludeProperties.Add("Email");
+                })
+                .WriteTo.Sink(inMemorySink)
+                .CreateLogger();
+
+            logger.Information("Example {email}", "user@example.com");
+
+            inMemorySink
+                .Should()
+                .HaveMessage("Example {email}")
+                .Appearing()
+                .Once()
+                .WithProperty("email")
+                .WithValue("user@example.com");
+        }
+
+        [Fact]
+        public void GivenLogMessageHasSpecificPropertyAndPropertyIsExcludedAndAlsoIncluded_PropertyValueIsNotMasked()
+        {
+            var inMemorySink = new InMemorySink();
+
+            var logger =  new LoggerConfiguration()
+                .Enrich.WithSensitiveDataMasking(options =>
+                {
+                    options.MaskProperties.Add("Email");
+                    options.ExcludeProperties.Add("Email");
+                })
+                .WriteTo.Sink(inMemorySink)
+                .CreateLogger();
+
+            logger.Information("Example {email}", "user@example.com");
+
+            inMemorySink
+                .Should()
+                .HaveMessage("Example {email}")
+                .Appearing()
+                .Once()
+                .WithProperty("email")
+                .WithValue("user@example.com");
+        }
     }
 }

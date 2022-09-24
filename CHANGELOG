@@ -3,6 +3,7 @@
 ## 1.3.0
 
 - Add the default enricher logo to package [#5](https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/issues/5)
+- Add option to exclude properties from masking [#9](https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/issues/9)
 
 ## 1.2.0
 
