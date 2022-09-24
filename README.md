@@ -95,7 +95,44 @@ The effect is that the log message will be rendered as:
 
 See the [Serilog.Enrichers.Sensitive.Demo](src/Serilog.Enrichers.Sensitive.Demo/Program.cs) app for a code example of the above.
 
-## Using a custom mask value
+### Configuring masking operators to use
+
+By default the enricher uses the following masking operators:
+
+- EmailAddressMaskingOperator
+- IbanMaskingOperator
+- CreditCardMaskingOperator
+
+It's good practice to only configure the masking operators that are applicable for your application. For example:
+
+```csharp
+new LoggerConfiguration()
+    .Enrich
+    .WithSensitiveDataMasking(
+        options =>
+        {
+            options.MaskingOperators = new List<IMaskingOperator> 
+            {
+                new EmailAddressMaskingOperator(),
+                new IbanMaskingOperator()
+                // etc etc
+            };
+        });
+```csharp
+
+It is also possible to not use any masking operators but instead mask based on property names. In that case you can configure the enricher to not use any masking operators at all:
+
+```csharp
+new LoggerConfiguration()
+    .Enrich
+    .WithSensitiveDataMasking(
+        options =>
+        {
+            options.MaskingOperators.Clear();
+        });
+```csharp
+
+### Using a custom mask value
 
 In case the default mask value `***MASKED***` is not what you want, you can supply your own mask value:
 
@@ -112,7 +149,7 @@ A example rendered message would then look like:
 
 You can specify any mask string as long as it's non-null or an empty string.
 
-## Always mask a property
+### Always mask a property
 
 It may be that you always want to mask the value of a property regardless of whether it matches a pattern for any of the masking operators. In that case you can specify that the property is always masked:
 
@@ -133,7 +170,7 @@ logger.Information("This is a sensitive {Email}", "this doesn't match the regex 
 
 the rendered log message comes out as: `"This is a sensitive ***MASKED***"`
 
-## Never mask a property
+### Never mask a property
 
 It may be that you never want to mask the value of a property regardless of whether it matches a pattern for any of the masking operators. In that case you can specify that the property is never masked:
 
