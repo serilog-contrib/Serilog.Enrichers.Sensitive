@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Serilog.Configuration;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Sinks.InMemory;
@@ -19,26 +20,24 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
             var inMemorySink = new InMemorySink();
 
             var logger = new LoggerConfiguration()
-                // Add a bunch of sinks for demonstration purposes
-                .WriteTo.Sink(inMemorySink)
-                .WriteTo.Console()
-                .WriteTo.Debug()
+                .WriteTo.Masked(options =>
+                    {
+                        options.Mode = MaskingMode.Globally;
+                        options.MaskingOperators = new List<IMaskingOperator> { new EmailAddressMaskingOperator() };
+                    },
+                    writeTo =>
+                    {
+                        // Add a bunch of sinks for demonstration purposes
+                        writeTo.Sink(inMemorySink);
+                        writeTo.Console();
+                        writeTo.Debug();
+                    })
                 .Enrich.FromLogContext()
-                .CreateLogger()
-                // Calling this on the created logger instead of the
-                // LoggerConfiguration because this approach depends
-                // on the aggregate sink being created. As far as I
-                // can tell there is no way to plug in to that process
-                // via the LoggerConfiguration.
-                .WithSensitiveDataMasking(options =>
-                {
-                    options.Mode = MaskingMode.Globally;
-                    options.MaskingOperators = new List<IMaskingOperator> { new EmailAddressMaskingOperator() };
-                });
+                .CreateLogger();
 
             // Log a message with sensitive data
             logger.Information("Test message {Email}", "joe.blogs@example.com");
-            
+
             // Assert that the e-mail address has been masked
             inMemorySink
                 .Should()
@@ -51,41 +50,18 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
 
     public static class ExtensionMethods
     {
-        public static Logger WithSensitiveDataMasking(
-            this Logger logger, 
-            Action<SensitiveDataEnricherOptions> options)
+        public static LoggerConfiguration Masked(
+            this LoggerSinkConfiguration loggerSinkConfiguration,
+            Action<SensitiveDataEnricherOptions> options, 
+            Action<LoggerSinkConfiguration> writeTo)
         {
-            // We want to intercept all the log events sent to the logger.
-            // To do that we get the field that holds the "root" sink and
-            // then wrap that in our own masking sink.
-
-            // This is of course very ugly and I apologize for this abomination...
-
-            // Use reflection to obtain the _sink field
-            var sinkField = logger.GetType().GetField("_sink", BindingFlags.Instance | BindingFlags.NonPublic);
-
-            if (sinkField == null)
-            {
-                throw new Exception("Unable to obtain the root sink from the logger");
-            }
-
-            // Even though the value of _sink is a SafeAggregateSink or similar
-            // we don't really care, all we need is something we can recognize
-            // which is why this is casted to a ILogEventSink
-            var currentSink = sinkField.GetValue(logger) as ILogEventSink;
-
-            if (currentSink == null)
-            {
-                throw new Exception("The root sink is null and I can't configure myself now");
-            }
-
-            // Create the masking sink that wraps the original aggregate one
-            var maskingSink = new MaskingSink(currentSink, options);
-
-            // Replace the "root" sink on the logger
-            sinkField.SetValue(logger, maskingSink);
-
-            return logger;
+            return LoggerSinkConfiguration.Wrap(
+                loggerSinkConfiguration,
+                sink => new MaskingSink(sink, options),
+                writeTo,
+                LevelAlias.Minimum,
+                null
+            );
         }
     }
 
