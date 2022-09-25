@@ -27,10 +27,10 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
                     },
                     writeTo =>
                     {
-                        // Add a bunch of sinks for demonstration purposes
-                        writeTo.Sink(inMemorySink);
+                        // Add sinks here instead of directly on LoggerConfiguration.WriteTo
                         writeTo.Console();
                         writeTo.Debug();
+                        writeTo.Sink(inMemorySink);
                     })
                 .Enrich.FromLogContext()
                 .CreateLogger();
@@ -52,16 +52,17 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
     {
         public static LoggerConfiguration Masked(
             this LoggerSinkConfiguration loggerSinkConfiguration,
-            Action<SensitiveDataEnricherOptions> options, 
+            Action<SensitiveDataEnricherOptions> options,
             Action<LoggerSinkConfiguration> writeTo)
         {
-            return LoggerSinkConfiguration.Wrap(
-                loggerSinkConfiguration,
-                sink => new MaskingSink(sink, options),
-                writeTo,
-                LevelAlias.Minimum,
-                null
-            );
+            return LoggerSinkConfiguration
+                .Wrap(
+                    loggerSinkConfiguration,
+                    sink => new MaskingSink(sink, options),
+                    writeTo,
+                    LevelAlias.Minimum,
+                    null
+                );
         }
     }
 
@@ -84,7 +85,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
             Action<SensitiveDataEnricherOptions> options)
         {
             _aggregateSink = aggregateSink;
-            
+
             var enricherOptions = new SensitiveDataEnricherOptions();
 
             if (options != null)
@@ -96,7 +97,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
             {
                 throw new Exception("The mask must be a non-empty string");
             }
-            
+
             _maskingMode = enricherOptions.Mode;
             _maskValue = enricherOptions.MaskValue;
             _maskProperties = enricherOptions.MaskProperties ?? new List<string>();
