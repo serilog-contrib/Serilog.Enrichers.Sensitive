@@ -17,7 +17,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
 
             action
                 .Should()
-                .Throw<ArgumentNullException>();
+                .Throw<Exception>();
         }
 
         [Fact]
@@ -29,7 +29,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
 
             action
                 .Should()
-                .Throw<ArgumentNullException>();
+                .Throw<Exception>();
         }
 
         [Fact]

@@ -8,7 +8,7 @@ namespace Serilog.Enrichers.Sensitive
         /// <summary>
         /// Sets whether masking should happen for all log messages ('Globally') or only in sensitive areas ('SensitiveArea')
         /// </summary>
-        public MaskingMode Mode { get; set; }
+        public MaskingMode Mode { get; set; } = MaskingMode.Globally;
         /// <summary>
         /// The string that replaces the sensitive value, defaults to '***MASKED***'
         /// </summary>

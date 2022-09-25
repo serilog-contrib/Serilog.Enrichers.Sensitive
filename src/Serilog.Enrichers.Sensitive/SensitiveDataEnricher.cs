@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Parsing;
@@ -33,7 +32,7 @@ namespace Serilog.Enrichers.Sensitive
 
             if (string.IsNullOrEmpty(enricherOptions.MaskValue))
             {
-                throw new ArgumentNullException("mask", "The mask must be a non-empty string");
+                throw new Exception("The mask must be a non-empty string");
             }
             
             _maskingMode = enricherOptions.Mode;
