@@ -14,10 +14,9 @@
 		<Copyright Condition="'$(Copyright)' == ''">2021 Sander van Vliet</Copyright>
 		<Authors Condition="'$(Authors)' == ''">Sander van Vliet, Huibert Jan Nieuwkamer, Scott Toberman</Authors>
 		<PackageProjectUrl>https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/README.md</PackageProjectUrl>
-		<PackageLicenseUrl>https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/LICENSE</PackageLicenseUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<RepositoryUrl>https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/</RepositoryUrl>
-		<PackageIcon>images\icon.png</PackageIcon>
+		<PackageIcon>./images/icon.png</PackageIcon>
 		<PackageIconUrl>https://serilog.net/images/serilog-sink-nuget.png</PackageIconUrl>
 		<RepositoryType>git</RepositoryType>
 	</PropertyGroup>
@@ -26,6 +25,12 @@
 		<PackageReference Include="serilog" Version="2.9.0">
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="images\icon.png" Pack="True" PackagePath="">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

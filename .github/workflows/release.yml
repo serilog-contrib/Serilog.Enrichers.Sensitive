@@ -1,0 +1,52 @@
+name: release
+
+on:
+  push:
+    tags: 
+    - releases/[0-9]+.[0-9]+.[0-9]+
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - name: Get the version
+      id: get_version
+      run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/releases\//}
+      shell: bash
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore -c Release .\Serilog.Enrichers.Sensitive.sln
+    - name: Test
+      run: dotnet test --no-build --verbosity normal -c Release
+    - name: Create NuGet package
+      run: dotnet pack ./src/Serilog.Enrichers.Sensitive/Serilog.Enrichers.Sensitive.csproj -c Release --no-build --no-restore
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        release_name: ${{ steps.get_version.outputs.VERSION }}
+        draft: false
+        prerelease: false
+    - name: Upload NuGet package
+      id: upload-release-asset 
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+        asset_path: ./packaging/Serilog.Enrichers.Sensitive.${{ steps.get_version.outputs.VERSION }}.nupkg
+        asset_name: Serilog.Enrichers.Sensitive.${{ steps.get_version.outputs.VERSION }}.nupkg
+        asset_content_type: application/octet-stream
+    - name: Publish package to public NuGet repository
+      run: dotnet nuget push -k ${{ secrets.NUGET_TOKEN }} ./packaging/Serilog.Enrichers.Sensitive.${{ steps.get_version.outputs.VERSION }}.nupkg --skip-duplicate --no-symbols true
