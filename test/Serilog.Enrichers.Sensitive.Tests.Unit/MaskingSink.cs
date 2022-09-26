@@ -15,7 +15,6 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         private readonly MaskingMode _maskingMode;
 
         private static readonly MessageTemplateParser Parser = new MessageTemplateParser();
-        private readonly FieldInfo _messageTemplateBackingField;
         private readonly List<IMaskingOperator> _maskingOperators;
         private readonly string _maskValue;
         private readonly List<string> _maskProperties;
@@ -45,10 +44,6 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
             _maskProperties = enricherOptions.MaskProperties ?? new List<string>();
             _excludeProperties = enricherOptions.ExcludeProperties ?? new List<string>();
 
-            var fields = typeof(LogEvent).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
-
-            _messageTemplateBackingField = fields.SingleOrDefault(f => f.Name.Contains("<MessageTemplate>"));
-
             _maskingOperators = enricherOptions.MaskingOperators.ToList();
         }
 
@@ -56,20 +51,12 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         {
             if (_maskingMode == MaskingMode.Globally || SensitiveArea.Instance != null)
             {
-                Mask(logEvent);
-
-                if (logEvent.Exception != null)
-                {
-                    logEvent = new LogEvent(
-                        logEvent.Timestamp,
-                        logEvent.Level,
-                        MaskException(logEvent.Exception),
-                        logEvent.MessageTemplate,
-                        logEvent.Properties.Select(kv => new LogEventProperty(kv.Key, kv.Value)));
-                }
+                _aggregateSink.Emit(Mask(logEvent));
             }
-
-            _aggregateSink.Emit(logEvent);
+            else
+            {
+                _aggregateSink.Emit(logEvent);
+            }
         }
 
         private Exception MaskException(Exception exception)
@@ -101,7 +88,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
                     {
                         if (dictionary[key] is string dictionaryStringValue)
                         {
-                            var maskedValue = ReplaceSensitiveDataFromString(dictionaryStringValue); 
+                            var maskedValue = ReplaceSensitiveDataFromString(dictionaryStringValue);
                             replacementDictionary.Add(key, maskedValue);
                         }
                         else
@@ -139,46 +126,61 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
                 .GetConstructor(BindingFlags.CreateInstance | BindingFlags.Instance | BindingFlags.NonPublic,
                     null,
                     CallingConventions.Any,
-                    new Type[] { typeof(SerializationInfo), typeof(StreamingContext) },
+                    new[] { typeof(SerializationInfo), typeof(StreamingContext) },
                     Array.Empty<ParameterModifier>());
 
             return deserializingConstructor
                 .Invoke(
                     new object[]
                     {
-                        maskedSerializationInfo, 
+                        maskedSerializationInfo,
                         context
                     }) as Exception;
         }
 
-        private void Mask(LogEvent logEvent)
+        private LogEvent Mask(LogEvent logEvent)
         {
             var messageTemplateText = ReplaceSensitiveDataFromString(logEvent.MessageTemplate.Text);
 
-            _messageTemplateBackingField.SetValue(logEvent, Parser.Parse(messageTemplateText));
+            var maskedProperties = new List<LogEventProperty>();
 
             foreach (var property in logEvent.Properties.ToList())
             {
                 if (_excludeProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
                 {
+                    maskedProperties.Add(new LogEventProperty(property.Key, property.Value));
                     continue;
                 }
 
                 if (_maskProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
                 {
-                    logEvent.AddOrUpdateProperty(
+                    maskedProperties.Add(
                         new LogEventProperty(
                             property.Key,
                             new ScalarValue(_maskValue)));
                 }
                 else if (property.Value is ScalarValue { Value: string stringValue })
                 {
-                    logEvent.AddOrUpdateProperty(
+                    maskedProperties.Add(
                         new LogEventProperty(
                             property.Key,
                             new ScalarValue(ReplaceSensitiveDataFromString(stringValue))));
                 }
             }
+
+            var exception = logEvent.Exception;
+
+            if (exception != null)
+            {
+                exception = MaskException(exception);
+            }
+
+            return new LogEvent(
+                logEvent.Timestamp,
+                logEvent.Level,
+                exception,
+                Parser.Parse(messageTemplateText),
+                maskedProperties);
         }
 
         private string ReplaceSensitiveDataFromString(string input)
