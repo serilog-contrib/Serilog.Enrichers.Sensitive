@@ -61,6 +61,22 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
 
         private Exception MaskException(Exception exception)
         {
+            // Masking exceptions presents an interesting challenge.
+            // In many cases exceptions are meant to be immutable so
+            // the exposed properties will not have public accessible 
+            // setters. Which is a good thing, but that makes our life
+            // more difficult.
+            //
+            // Fortunately, exceptions are _also_ meant to be serializable.
+            // That gives us an opportunity to serialize the exception,
+            // perform the masking on the serialized data, and then
+            // deserialize that into the original exception type.
+            //
+            // Of course it really depends on the implementor of the 
+            // exception whether that is all fully implemented but
+            // that's not really our problem. Better to lose some
+            // information than having sensitive info in the logs...
+
             var exceptionType = exception.GetType();
             var serializationInfo = new SerializationInfo(exceptionType, new FormatterConverter());
             var context = new StreamingContext();
@@ -70,8 +86,10 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
 
             var enumerator = serializationInfo.GetEnumerator();
 
+            // Loop through all the serialized items
             while (enumerator.MoveNext())
             {
+                // Bit of ergonomics...
                 var entry = enumerator.Current;
 
                 if (entry.Value is string stringValue)
@@ -80,25 +98,35 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
 
                     maskedSerializationInfo.AddValue(entry.Name, maskedValue, entry.ObjectType);
                 }
+                // This deals with the Data property of exceptions
                 else if (entry.Value is IDictionary dictionary)
                 {
+                    // Construct a new dictionary to take the values
+                    // because trying to modify an IDictionary in-place
+                    // while enumerating will fail with a "collection modified"
+                    // exception (as it's a hash table really)
                     var replacementDictionary = new Dictionary<object, object>();
 
                     foreach (var key in dictionary.Keys)
                     {
                         if (dictionary[key] is string dictionaryStringValue)
                         {
-                            var maskedValue = ReplaceSensitiveDataFromString(dictionaryStringValue);
-                            replacementDictionary.Add(key, maskedValue);
+                            replacementDictionary.Add(
+                                key,
+                                ReplaceSensitiveDataFromString(dictionaryStringValue));
                         }
                         else
                         {
+                            // TODO: check if the dictionary contains an exception
                             replacementDictionary.Add(key, dictionary[key]);
                         }
                     }
 
                     maskedSerializationInfo.AddValue(entry.Name, replacementDictionary, entry.ObjectType);
                 }
+                // This handles the AggregateException. We need to do this before
+                // handling InnerException because on AggregateException that points
+                // to the first exception of the InnerExceptions collection...
                 else if (entry.Value is Exception[] innerExceptions)
                 {
                     var replacementInnerExceptions = new List<Exception>();
@@ -110,18 +138,29 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
 
                     maskedSerializationInfo.AddValue(entry.Name, replacementInnerExceptions.ToArray(), entry.ObjectType);
                 }
+                #if NET6_0_OR_GREATER
+                else if (exception is not AggregateException && entry.Value is Exception innerException)
+                #else
                 else if (!typeof(AggregateException).IsAssignableFrom(exceptionType) && entry.Value is Exception innerException)
+                #endif
                 {
-                    var serializedMaskedException = MaskException(innerException);
-
-                    maskedSerializationInfo.AddValue(entry.Name, serializedMaskedException, entry.ObjectType);
+                    // TODO: Be smart here with recursion
+                    maskedSerializationInfo.AddValue(
+                        entry.Name, 
+                        MaskException(innerException), 
+                        entry.ObjectType);
                 }
                 else
                 {
+                    // Current entry contains a type that we don't know how to
+                    // handle, so add it to the modified serialization data.
                     maskedSerializationInfo.AddValue(entry.Name, entry.Value, entry.ObjectType);
                 }
             }
 
+            // Obtain the protected constructor on the exception to deserialize.
+            // We need to do this on the original exception type instead of Exception
+            // because it can (and should) be overridden in derived exceptions.
             var deserializingConstructor = exceptionType
                 .GetConstructor(BindingFlags.CreateInstance | BindingFlags.Instance | BindingFlags.NonPublic,
                     null,
@@ -129,6 +168,12 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
                     new[] { typeof(SerializationInfo), typeof(StreamingContext) },
                     Array.Empty<ParameterModifier>());
 
+            if (deserializingConstructor == null)
+            {
+                throw new Exception($"Unable to find deserializing constructor on exception type '{exceptionType.Name}'");
+            }
+
+            // Create an instance of the input exception type using deserialization
             return deserializingConstructor
                 .Invoke(
                     new object[]
@@ -149,10 +194,8 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
                 if (_excludeProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
                 {
                     maskedProperties.Add(new LogEventProperty(property.Key, property.Value));
-                    continue;
                 }
-
-                if (_maskProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
+                else if (_maskProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
                 {
                     maskedProperties.Add(
                         new LogEventProperty(
