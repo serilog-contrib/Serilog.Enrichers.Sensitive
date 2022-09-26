@@ -1,14 +1,12 @@
-﻿using System.Linq;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Data;
+using FluentAssertions;
 using Serilog.Configuration;
-using Serilog.Core;
 using Serilog.Events;
 using Serilog.Sinks.InMemory;
 using Serilog.Sinks.InMemory.Assertions;
 using Xunit;
-using Serilog.Parsing;
 
 namespace Serilog.Enrichers.Sensitive.Tests.Unit
 {
@@ -46,6 +44,184 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
                 .WithProperty("Email")
                 .WithValue("***MASKED***");
         }
+
+        [Fact]
+        public void ShowItWorksWithException()
+        {
+            var inMemorySink = new InMemorySink();
+
+            var logger = new LoggerConfiguration()
+                .WriteTo.Masked(options =>
+                    {
+                        options.Mode = MaskingMode.Globally;
+                        options.MaskingOperators = new List<IMaskingOperator> { new EmailAddressMaskingOperator() };
+                    },
+                    writeTo =>
+                    {
+                        // Add sinks here instead of directly on LoggerConfiguration.WriteTo
+                        writeTo.Console();
+                        writeTo.Debug();
+                        writeTo.Sink(inMemorySink);
+                    })
+                .Enrich.FromLogContext()
+                .CreateLogger();
+
+            // Log a message with sensitive data in an inner exception
+            var exception = new Exception("BANG!", new Exception("KAPUT!")
+            {
+                Data =
+                {
+                    { "Source", "joe.blogs@example.com" }
+                }
+            });
+            logger.Error(exception, "Something bad happened");
+
+            // Assert that the e-mail address has been masked
+            var exceptionInnerException = inMemorySink
+                .Should()
+                .HaveMessage("Something bad happened")
+                .Appearing().Once()
+                .Subject
+                .Exception
+                .InnerException;
+
+            ((string)exceptionInnerException.Data["Source"])
+                .Should()
+                .Be("***MASKED***");
+        }
+
+        [Fact]
+        public void ShowItWorksWithAggregateException()
+        {
+            var inMemorySink = new InMemorySink();
+
+            var logger = new LoggerConfiguration()
+                .WriteTo.Masked(options =>
+                    {
+                        options.Mode = MaskingMode.Globally;
+                        options.MaskingOperators = new List<IMaskingOperator> { new EmailAddressMaskingOperator() };
+                    },
+                    writeTo =>
+                    {
+                        // Add sinks here instead of directly on LoggerConfiguration.WriteTo
+                        writeTo.Console();
+                        writeTo.Debug();
+                        writeTo.Sink(inMemorySink);
+                    })
+                .Enrich.FromLogContext()
+                .CreateLogger();
+
+            // Log a message with sensitive data in an inner exception
+            var exception = new AggregateException(
+                "BANG!",
+                new Exception("KAPUT!")
+                {
+                    Data =
+                {
+                    { "Source", "joe.blogs@example.com" }
+                }
+                },
+                new Exception("KAPUT!")
+                {
+                    Data =
+                    {
+                        { "Source", "agent.smith@example.com" }
+                    }
+                });
+            logger.Error(exception, "Something bad happened");
+
+            // Assert that the e-mail address has been masked
+            var exceptionInnerException = inMemorySink
+                .Should()
+                .HaveMessage("Something bad happened")
+                .Appearing().Once()
+                .Subject
+                .Exception as AggregateException;
+
+            exceptionInnerException
+                .InnerExceptions
+                .Should()
+                .AllSatisfy(exception =>
+                    ((string)exception.Data["Source"])
+                    .Should()
+                    .Be("***MASKED***"));
+        }
+
+        [Fact]
+        public void ShowItWorksWithExceptionMessage()
+        {
+            var inMemorySink = new InMemorySink();
+
+            var logger = new LoggerConfiguration()
+                .WriteTo.Masked(options =>
+                    {
+                        options.Mode = MaskingMode.Globally;
+                        options.MaskingOperators = new List<IMaskingOperator> { new EmailAddressMaskingOperator() };
+                    },
+                    writeTo =>
+                    {
+                        // Add sinks here instead of directly on LoggerConfiguration.WriteTo
+                        writeTo.Console();
+                        writeTo.Debug();
+                        writeTo.Sink(inMemorySink);
+                    })
+                .Enrich.FromLogContext()
+                .CreateLogger();
+
+            // Log a message with sensitive data in an inner exception
+            var exception = new Exception("BANG joe.blogs@example.com!");
+            logger.Error(exception, "Something bad happened");
+
+            // Assert that the e-mail address has been masked
+            var exceptionInnerException = inMemorySink
+                .Should()
+                .HaveMessage("Something bad happened")
+                .Appearing().Once()
+                .Subject
+                .Exception
+                .Message
+                .Should()
+                .Be("BANG ***MASKED***!");
+        }
+
+        [Fact]
+        public void ShowItWorksWithEntityFrameworkException()
+        {
+            var inMemorySink = new InMemorySink();
+
+            var logger = new LoggerConfiguration()
+                .WriteTo.Masked(options =>
+                    {
+                        options.Mode = MaskingMode.Globally;
+                        options.MaskingOperators = new List<IMaskingOperator> { new EmailAddressMaskingOperator() };
+                    },
+                    writeTo =>
+                    {
+                        // Add sinks here instead of directly on LoggerConfiguration.WriteTo
+                        writeTo.Console();
+                        writeTo.Debug();
+                        writeTo.Sink(inMemorySink);
+                    })
+                .Enrich.FromLogContext()
+                .CreateLogger();
+
+            // Log a message with sensitive data in an inner exception
+            var exception =
+                new ConstraintException("Unique constraint UQ_Username violated with value 'joe.blogs@example.com'");
+
+            logger.Error(exception, "Something bad happened");
+
+            // Assert that the e-mail address has been masked
+            inMemorySink
+                .Should()
+                .HaveMessage("Something bad happened")
+                .Appearing().Once()
+                .Subject
+                .Exception
+                .Message
+                .Should()
+                .Be("Unique constraint UQ_Username violated with value ***MASKED***'");
+        }
     }
 
     public static class ExtensionMethods
@@ -63,106 +239,6 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
                     LevelAlias.Minimum,
                     null
                 );
-        }
-    }
-
-    // The masking sink is basically a copy of the enricher, only it uses the Emit()
-    // method instead of Enrich(). This isn't really the interesting part.
-    public class MaskingSink : ILogEventSink
-    {
-        private readonly MaskingMode _maskingMode;
-
-        private static readonly MessageTemplateParser Parser = new MessageTemplateParser();
-        private readonly FieldInfo _messageTemplateBackingField;
-        private readonly List<IMaskingOperator> _maskingOperators;
-        private readonly string _maskValue;
-        private readonly List<string> _maskProperties;
-        private readonly List<string> _excludeProperties;
-        private readonly ILogEventSink _aggregateSink;
-
-        public MaskingSink(
-            ILogEventSink aggregateSink,
-            Action<SensitiveDataEnricherOptions> options)
-        {
-            _aggregateSink = aggregateSink;
-
-            var enricherOptions = new SensitiveDataEnricherOptions();
-
-            if (options != null)
-            {
-                options(enricherOptions);
-            }
-
-            if (string.IsNullOrEmpty(enricherOptions.MaskValue))
-            {
-                throw new Exception("The mask must be a non-empty string");
-            }
-
-            _maskingMode = enricherOptions.Mode;
-            _maskValue = enricherOptions.MaskValue;
-            _maskProperties = enricherOptions.MaskProperties ?? new List<string>();
-            _excludeProperties = enricherOptions.ExcludeProperties ?? new List<string>();
-
-            var fields = typeof(LogEvent).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
-
-            _messageTemplateBackingField = fields.SingleOrDefault(f => f.Name.Contains("<MessageTemplate>"));
-
-            _maskingOperators = enricherOptions.MaskingOperators.ToList();
-        }
-
-        public void Emit(LogEvent logEvent)
-        {
-            Mask(logEvent);
-
-            _aggregateSink.Emit(logEvent);
-        }
-
-        private void Mask(LogEvent logEvent)
-        {
-            if (_maskingMode == MaskingMode.Globally || SensitiveArea.Instance != null)
-            {
-                var messageTemplateText = ReplaceSensitiveDataFromString(logEvent.MessageTemplate.Text);
-
-                _messageTemplateBackingField.SetValue(logEvent, Parser.Parse(messageTemplateText));
-
-                foreach (var property in logEvent.Properties.ToList())
-                {
-                    if (_excludeProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    if (_maskProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
-                    {
-                        logEvent.AddOrUpdateProperty(
-                            new LogEventProperty(
-                                property.Key,
-                                new ScalarValue(_maskValue)));
-                    }
-                    else if (property.Value is ScalarValue { Value: string stringValue })
-                    {
-                        logEvent.AddOrUpdateProperty(
-                            new LogEventProperty(
-                                property.Key,
-                                new ScalarValue(ReplaceSensitiveDataFromString(stringValue))));
-                    }
-                }
-            }
-        }
-
-        private string ReplaceSensitiveDataFromString(string input)
-        {
-            foreach (var maskingOperator in _maskingOperators)
-            {
-                var maskResult = maskingOperator.Mask(input, _maskValue);
-
-                if (maskResult.Match)
-                {
-                    input = maskResult.Result;
-                }
-            }
-
-            return input;
         }
     }
 }
