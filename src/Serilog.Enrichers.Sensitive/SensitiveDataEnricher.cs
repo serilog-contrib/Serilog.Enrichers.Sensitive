@@ -35,7 +35,7 @@ namespace Serilog.Enrichers.Sensitive
             {
                 throw new ArgumentNullException("mask", "The mask must be a non-empty string");
             }
-            
+
             _maskingMode = enricherOptions.Mode;
             _maskValue = enricherOptions.MaskValue;
             _maskProperties = enricherOptions.MaskProperties ?? new List<string>();
@@ -49,7 +49,7 @@ namespace Serilog.Enrichers.Sensitive
         }
 
         public SensitiveDataEnricher(
-            MaskingMode maskingMode, 
+            MaskingMode maskingMode,
             IEnumerable<IMaskingOperator> maskingOperators,
             string mask = DefaultMaskValue)
         : this(options =>
@@ -71,6 +71,39 @@ namespace Serilog.Enrichers.Sensitive
 
                 foreach (var property in logEvent.Properties.ToList())
                 {
+                    if (property.Value is StructureValue structureProperty)
+                    {
+                        // This is readonly collection in the original property
+                        var newProperties = new List<LogEventProperty>();
+                        foreach (var structureEventProperty in structureProperty.Properties.ToList())
+                        {
+                            if (_maskProperties.Contains(structureEventProperty.Name, StringComparer.InvariantCultureIgnoreCase))
+                            {
+                                newProperties.Add(
+                                    new LogEventProperty(
+                                        structureEventProperty.Name,
+                                        new ScalarValue(_maskValue)));
+                            }
+                            else if (structureEventProperty.Value is ScalarValue structureScalar && structureScalar.Value is string structureString)
+                            {
+                                newProperties.Add(
+                                    new LogEventProperty(
+                                        structureEventProperty.Name,
+                                        new ScalarValue(ReplaceSensitiveDataFromString(structureString))));
+                            }
+                            else // if not masked, put back as normal
+                            {
+                                newProperties.Add(
+                                    new LogEventProperty(
+                                        structureEventProperty.Name,
+                                        new ScalarValue(structureEventProperty.Value)));
+                            }
+                        }
+
+                        var newStructure = new StructureValue(newProperties);
+                        logEvent.AddOrUpdateProperty(new LogEventProperty(property.Key, newStructure));
+                    }
+
                     if (_excludeProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
                     {
                         continue;
