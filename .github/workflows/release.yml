@@ -36,7 +36,7 @@ jobs:
     - name: Get changelog
       id: get_changelog
       run: |
-          ./get-changelog.ps1 -currentVersion "${{ steps.get_version.outputs.info }}"
+          ./get-changelog.ps1 -currentVersion "${{ steps.shortversion.outputs.shortversion }}"
       shell: pwsh
     - name: Create Release
       id: create_release
