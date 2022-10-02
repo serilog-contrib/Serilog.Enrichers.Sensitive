@@ -1,9 +1,6 @@
-name: release
+name: pre-release
 
-on:
-  push:
-    tags: 
-    - releases/[0-9]+.[0-9]+.[0-9]+
+on: workflow_dispatch
 
 jobs:
   build:
@@ -47,7 +44,7 @@ jobs:
         tag_name: ${{ steps.get_version.outputs.info }}
         release_name: ${{ steps.get_version.outputs.info }}
         draft: false
-        prerelease: false
+        prerelease: true
         body_path: ./version-changelog.md
     - name: Upload enricher NuGet package
       id: upload-nuget-enricher
