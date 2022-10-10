@@ -1,5 +1,9 @@
 # Changelog for Serilog.Enrichers.Sensitive
 
+## 1.4.0
+
+- Add support for masking destructured objects
+
 ## 1.3.0
 
 - Add the default enricher logo to package [#5](https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/issues/5)

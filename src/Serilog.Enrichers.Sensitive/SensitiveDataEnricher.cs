@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using Serilog.Core;
 using Serilog.Events;
 using Serilog.Parsing;
@@ -35,7 +34,7 @@ namespace Serilog.Enrichers.Sensitive
             {
                 throw new ArgumentNullException("mask", "The mask must be a non-empty string");
             }
-            
+
             _maskingMode = enricherOptions.Mode;
             _maskValue = enricherOptions.MaskValue;
             _maskProperties = enricherOptions.MaskProperties ?? new List<string>();
@@ -49,7 +48,7 @@ namespace Serilog.Enrichers.Sensitive
         }
 
         public SensitiveDataEnricher(
-            MaskingMode maskingMode, 
+            MaskingMode maskingMode,
             IEnumerable<IMaskingOperator> maskingOperators,
             string mask = DefaultMaskValue)
         : this(options =>
@@ -71,27 +70,48 @@ namespace Serilog.Enrichers.Sensitive
 
                 foreach (var property in logEvent.Properties.ToList())
                 {
-                    if (_excludeProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
-                    {
-                        continue;
-                    }
+                    var maskedValue = MaskProperty(property);
 
-                    if (_maskProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
-                    {
-                        logEvent.AddOrUpdateProperty(
+                    logEvent
+                        .AddOrUpdateProperty(
                             new LogEventProperty(
                                 property.Key,
-                                new ScalarValue(_maskValue)));
-                    }
-                    else if (property.Value is ScalarValue scalar && scalar.Value is string stringValue)
-                    {
-                        logEvent.AddOrUpdateProperty(
-                            new LogEventProperty(
-                                property.Key,
-                                new ScalarValue(ReplaceSensitiveDataFromString(stringValue))));
-                    }
+                                maskedValue));
                 }
             }
+        }
+
+        private LogEventPropertyValue MaskProperty(KeyValuePair<string, LogEventPropertyValue> property)
+        {
+            if (_excludeProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
+            {
+                return property.Value;
+            }
+
+            if (_maskProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
+            {
+                return new ScalarValue(_maskValue);
+            }
+
+            if (property.Value is ScalarValue scalar && scalar.Value is string stringValue)
+            {
+                return new ScalarValue(ReplaceSensitiveDataFromString(stringValue));
+            }
+            if (property.Value is StructureValue structureValue)
+            {
+                var propList = new List<LogEventProperty>();
+
+                foreach (var prop in structureValue.Properties)
+                {
+                    var maskedValue = MaskProperty(new KeyValuePair<string, LogEventPropertyValue>(prop.Name, prop.Value));
+
+                    propList.Add(new LogEventProperty(prop.Name, maskedValue));
+                }
+
+                return new StructureValue(propList);
+            }
+
+            return property.Value;
         }
 
         private string ReplaceSensitiveDataFromString(string input)
