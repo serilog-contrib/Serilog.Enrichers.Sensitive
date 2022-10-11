@@ -13,7 +13,7 @@ namespace Serilog.Enrichers.Sensitive
         private readonly MaskingMode _maskingMode;
         public const string DefaultMaskValue = "***MASKED***";
 
-        private static readonly MessageTemplateParser Parser = new MessageTemplateParser();
+        private static readonly MessageTemplateParser Parser = new();
         private readonly FieldInfo _messageTemplateBackingField;
         private readonly List<IMaskingOperator> _maskingOperators;
         private readonly string _maskValue;

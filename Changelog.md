@@ -3,6 +3,7 @@
 ## 1.4.0
 
 - Add support for masking destructured objects
+- Marked the `WithSensitiveDataMasking()` methods that take specific parameters as obsolete in favour of the `WithSensitiveDataMasking(options => {})` version
 
 ## 1.3.0
 
