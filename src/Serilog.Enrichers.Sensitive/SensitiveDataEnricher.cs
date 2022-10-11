@@ -21,7 +21,7 @@ namespace Serilog.Enrichers.Sensitive
         private readonly List<string> _excludeProperties;
 
         public SensitiveDataEnricher(
-            Action<SensitiveDataEnricherOptions> options)
+            Action<SensitiveDataEnricherOptions>? options)
         {
             var enricherOptions = new SensitiveDataEnricherOptions();
 
@@ -39,12 +39,19 @@ namespace Serilog.Enrichers.Sensitive
             _maskValue = enricherOptions.MaskValue;
             _maskProperties = enricherOptions.MaskProperties ?? new List<string>();
             _excludeProperties = enricherOptions.ExcludeProperties ?? new List<string>();
+            _maskingOperators = enricherOptions.MaskingOperators.ToList();
 
             var fields = typeof(LogEvent).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
 
-            _messageTemplateBackingField = fields.SingleOrDefault(f => f.Name.Contains("<MessageTemplate>"));
+            var backingField = fields.SingleOrDefault(f => f.Name.Contains("<MessageTemplate>"));
+            
+            if (backingField == null)
+            {
+                throw new InvalidOperationException(
+                    "Could not find the backing field for the message template on the LogEvent type");
+            }
 
-            _maskingOperators = enricherOptions.MaskingOperators.ToList();
+            _messageTemplateBackingField = backingField;
         }
 
         public SensitiveDataEnricher(
@@ -83,7 +90,7 @@ namespace Serilog.Enrichers.Sensitive
                             .AddOrUpdateProperty(
                                 new LogEventProperty(
                                     property.Key,
-                                    maskedValue));
+                                    maskedValue!));
                     }
                 }
             }
@@ -125,7 +132,7 @@ namespace Serilog.Enrichers.Sensitive
                             if (wasMasked)
                             {
                                 anyMasked = true;
-                                propList.Add(new LogEventProperty(prop.Name, maskedValue));
+                                propList.Add(new LogEventProperty(prop.Name, maskedValue!));
                             }
                             else
                             {

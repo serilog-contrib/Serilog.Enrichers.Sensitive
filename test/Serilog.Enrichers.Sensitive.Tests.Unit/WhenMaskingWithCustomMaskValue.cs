@@ -12,7 +12,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         public void GivenMaskValueIsNull_ArgumentNullExceptionIsThrown()
         {
             Action action = () => new LoggerConfiguration()
-                .Enrich.WithSensitiveDataMasking(options => options.MaskValue = null)
+                .Enrich.WithSensitiveDataMasking(options => options.MaskValue = null!)
                 .CreateLogger();
 
             action

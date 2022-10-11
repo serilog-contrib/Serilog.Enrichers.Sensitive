@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text.RegularExpressions;
 using FluentAssertions;
 using Xunit;
 
@@ -18,7 +17,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
 		[Fact]
 		public void GivenConstructor_NullPatternThrowsException()
 		{
-			var ex = Record.Exception(() => new RegexExtenderWithOptions(null));
+			var ex = Record.Exception(() => new RegexExtenderWithOptions(null!));
 			ex
 				.Should()
 				.NotBeNull()

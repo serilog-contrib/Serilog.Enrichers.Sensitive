@@ -5,9 +5,9 @@ namespace Serilog.Enrichers.Sensitive
 {
     public class SensitiveArea : IDisposable
     {
-        private static readonly AsyncLocal<SensitiveArea> InstanceLocal = new AsyncLocal<SensitiveArea>();
+        private static readonly AsyncLocal<SensitiveArea?> InstanceLocal = new();
 
-        public static SensitiveArea Instance
+        public static SensitiveArea? Instance
         {
             get => InstanceLocal.Value;
             set => InstanceLocal.Value = value;
