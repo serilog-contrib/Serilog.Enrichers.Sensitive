@@ -4,6 +4,7 @@
 		<OutputType>Exe</OutputType>
 		<TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>

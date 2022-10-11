@@ -20,6 +20,7 @@
 		<PackageIconUrl>https://serilog.net/images/serilog-sink-nuget.png</PackageIconUrl>
 		<RepositoryType>git</RepositoryType>
 		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>
