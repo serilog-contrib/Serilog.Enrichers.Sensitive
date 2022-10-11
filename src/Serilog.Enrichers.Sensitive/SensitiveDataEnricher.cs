@@ -64,69 +64,98 @@ namespace Serilog.Enrichers.Sensitive
         {
             if (_maskingMode == MaskingMode.Globally || SensitiveArea.Instance != null)
             {
-                var messageTemplateText = ReplaceSensitiveDataFromString(logEvent.MessageTemplate.Text);
+                var (wasTemplateMasked, messageTemplateText) = ReplaceSensitiveDataFromString(logEvent.MessageTemplate.Text);
 
-                _messageTemplateBackingField.SetValue(logEvent, Parser.Parse(messageTemplateText));
+                // Only replace the template if it was actually masked
+                if (wasTemplateMasked)
+                {
+                    _messageTemplateBackingField.SetValue(logEvent, Parser.Parse(messageTemplateText));
+                }
 
                 foreach (var property in logEvent.Properties.ToList())
                 {
-                    var maskedValue = MaskProperty(property);
+                    var (wasMasked, maskedValue) = MaskProperty(property);
 
-                    logEvent
-                        .AddOrUpdateProperty(
-                            new LogEventProperty(
-                                property.Key,
-                                maskedValue));
+                    // Only update the property if it was actually masked
+                    if (wasMasked)
+                    {
+                        logEvent
+                            .AddOrUpdateProperty(
+                                new LogEventProperty(
+                                    property.Key,
+                                    maskedValue));
+                    }
                 }
             }
         }
 
-        private LogEventPropertyValue MaskProperty(KeyValuePair<string, LogEventPropertyValue> property)
+        private (bool, LogEventPropertyValue?) MaskProperty(KeyValuePair<string, LogEventPropertyValue> property)
         {
             if (_excludeProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
             {
-                return property.Value;
+                return (false, null);
             }
 
             if (_maskProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
             {
-                return new ScalarValue(_maskValue);
+                return (true, new ScalarValue(_maskValue));
             }
 
-            if (property.Value is ScalarValue scalar && scalar.Value is string stringValue)
+            switch (property.Value)
             {
-                return new ScalarValue(ReplaceSensitiveDataFromString(stringValue));
+                case ScalarValue { Value: string stringValue }:
+                    {
+                        var (wasMasked, maskedValue) = ReplaceSensitiveDataFromString(stringValue);
+
+                        if (wasMasked)
+                        {
+                            return (true, new ScalarValue(maskedValue));
+                        }
+
+                        return (false, null);
+                    }
+                case StructureValue structureValue:
+                    {
+                        var propList = new List<LogEventProperty>();
+                        var anyMasked = false;
+                        foreach (var prop in structureValue.Properties)
+                        {
+                            var (wasMasked, maskedValue) = MaskProperty(new KeyValuePair<string, LogEventPropertyValue>(prop.Name, prop.Value));
+
+                            if (wasMasked)
+                            {
+                                anyMasked = true;
+                                propList.Add(new LogEventProperty(prop.Name, maskedValue));
+                            }
+                            else
+                            {
+                                propList.Add(prop);
+                            }
+                        }
+
+                        return (anyMasked, new StructureValue(propList));
+                    }
+                default:
+                    return (false, null);
             }
-            if (property.Value is StructureValue structureValue)
-            {
-                var propList = new List<LogEventProperty>();
-
-                foreach (var prop in structureValue.Properties)
-                {
-                    var maskedValue = MaskProperty(new KeyValuePair<string, LogEventPropertyValue>(prop.Name, prop.Value));
-
-                    propList.Add(new LogEventProperty(prop.Name, maskedValue));
-                }
-
-                return new StructureValue(propList);
-            }
-
-            return property.Value;
         }
 
-        private string ReplaceSensitiveDataFromString(string input)
+        private (bool, string) ReplaceSensitiveDataFromString(string input)
         {
+            var isMasked = false;
+
             foreach (var maskingOperator in _maskingOperators)
             {
                 var maskResult = maskingOperator.Mask(input, _maskValue);
 
                 if (maskResult.Match)
                 {
+                    isMasked = true;
                     input = maskResult.Result;
                 }
             }
 
-            return input;
+            return (isMasked, input);
         }
 
         public static IEnumerable<IMaskingOperator> DefaultOperators => new List<IMaskingOperator>
