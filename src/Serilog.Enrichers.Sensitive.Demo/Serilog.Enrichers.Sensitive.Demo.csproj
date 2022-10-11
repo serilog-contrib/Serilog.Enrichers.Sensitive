@@ -1,17 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net6.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="serilog" Version="2.12.0" />
-    <PackageReference Include="serilog.sinks.console" Version="4.1.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="serilog" Version="2.12.0" />
+		<PackageReference Include="serilog.sinks.console" Version="4.1.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Serilog.Enrichers.Sensitive\Serilog.Enrichers.Sensitive.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Serilog.Enrichers.Sensitive\Serilog.Enrichers.Sensitive.csproj" />
+	</ItemGroup>
 
 </Project>

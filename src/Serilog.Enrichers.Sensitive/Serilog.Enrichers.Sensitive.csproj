@@ -19,6 +19,7 @@
 		<PackageIcon>./images/icon.png</PackageIcon>
 		<PackageIconUrl>https://serilog.net/images/serilog-sink-nuget.png</PackageIconUrl>
 		<RepositoryType>git</RepositoryType>
+		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -28,9 +29,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Update="images\icon.png" Pack="True" PackagePath="">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
+		<None Update="images\icon.png" Pack="True" PackagePath="">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 </Project>
