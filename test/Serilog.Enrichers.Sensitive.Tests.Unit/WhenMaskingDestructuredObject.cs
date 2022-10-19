@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Serilog.Core;
-using Serilog.Events;
 using Serilog.Sinks.InMemory;
 using Serilog.Sinks.InMemory.Assertions;
 using Xunit;
@@ -22,6 +20,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
                 .Enrich.WithSensitiveDataMasking(options =>
                 {
                     options.MaskingOperators = new List<IMaskingOperator> { new EmailAddressMaskingOperator() };
+                    options.MaskProperties.Add("SensitiveProperty");
                 })
                 .CreateLogger();
         }
@@ -90,12 +89,30 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
                 .WithProperty("TestProperty")
                 .WithValue("also not sensitive");
         }
+
+        [Fact]
+        public void GivenConfigurationToMaskSpecificPropertyAndLoggingADestructuredObject_PropertyOnObjectIsMasked()
+        {
+            var testObject = new TestObject();
+
+            _logger.Information("Test message {@TestObject}", testObject);
+
+            _sink
+                .Should()
+                .HaveMessage("Test message {@TestObject}")
+                .Appearing()
+                .Once()
+                .WithProperty("TestObject")
+                .HavingADestructuredObject()
+                .WithProperty("SensitiveProperty")
+                .WithValue("***MASKED***");
+        }
     }
 
     public class TestObject
     {
         public string TestProperty { get; set; } = "james.bond@universalexports.com";
-
+        public string SensitiveProperty { get; set; } = "Super sensitive data";
         public NestedTestObject Nested { get; set; } = new NestedTestObject();
     }
 
