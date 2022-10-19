@@ -32,13 +32,13 @@ namespace Serilog.Enrichers.Sensitive
 
             if (string.IsNullOrEmpty(enricherOptions.MaskValue))
             {
-                throw new ArgumentNullException("mask", "The mask must be a non-empty string");
+                throw new ArgumentNullException(nameof(enricherOptions.MaskValue), "The mask must be a non-empty string");
             }
 
             _maskingMode = enricherOptions.Mode;
             _maskValue = enricherOptions.MaskValue;
-            _maskProperties = enricherOptions.MaskProperties ?? new List<string>();
-            _excludeProperties = enricherOptions.ExcludeProperties ?? new List<string>();
+            _maskProperties = enricherOptions.MaskProperties;
+            _excludeProperties = enricherOptions.ExcludeProperties;
             _maskingOperators = enricherOptions.MaskingOperators.ToList();
 
             var fields = typeof(LogEvent).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
@@ -121,6 +121,25 @@ namespace Serilog.Enrichers.Sensitive
 
                         return (false, null);
                     }
+                case SequenceValue sequenceValue:
+                    var resultElements = new List<LogEventPropertyValue>();
+                    var anyElementMasked = false;
+                    foreach (var element in sequenceValue.Elements)
+                    {
+                        var (wasElementMasked, elementResult) = MaskProperty(new KeyValuePair<string, LogEventPropertyValue>(property.Key, element));
+                        
+                        if (wasElementMasked)
+                        {
+                            resultElements.Add(elementResult!);
+                            anyElementMasked = true;
+                        }
+                        else
+                        {
+                            resultElements.Add(element);
+                        }
+                    }
+
+                    return (anyElementMasked, new SequenceValue(resultElements));
                 case StructureValue structureValue:
                     {
                         var propList = new List<LogEventProperty>();

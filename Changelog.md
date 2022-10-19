@@ -1,5 +1,10 @@
 # Changelog for Serilog.Enrichers.Sensitive
 
+## 1.5.0
+
+- Add support for collections in destructured objects
+- Add support for destructured objects which are collections
+
 ## 1.4.0
 
 - Add support for masking destructured objects

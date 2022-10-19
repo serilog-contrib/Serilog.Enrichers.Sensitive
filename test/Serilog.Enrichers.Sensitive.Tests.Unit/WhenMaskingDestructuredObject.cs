@@ -1,5 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using FluentAssertions;
 using Serilog.Core;
+using Serilog.Events;
 using Serilog.Sinks.InMemory;
 using Serilog.Sinks.InMemory.Assertions;
 using Xunit;
@@ -29,9 +33,9 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         public void GivenLogMessageWithDestructuredObjectPropertyThatHasSensitiveData_SensitiveDataIsMasked()
         {
             var testObject = new TestObject();
-            
+
             _logger.Information("Test message {@TestObject}", testObject);
-            
+
             _sink
                 .Should()
                 .HaveMessage("Test message {@TestObject}")
@@ -47,7 +51,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         public void GivenLogMessageWithDestructuredObjectPropertyThatHasSensitiveDataInNestedProperty_SensitiveDataIsMasked()
         {
             var testObject = new TestObject();
-            
+
             _logger.Information("Test message {@TestObject}", testObject);
 
             _sink
@@ -74,7 +78,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
                     TestProperty = "also not sensitive"
                 }
             };
-            
+
             _logger.Information("Test message {@TestObject}", testObject);
 
             _sink
@@ -107,6 +111,116 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
                 .WithProperty("SensitiveProperty")
                 .WithValue("***MASKED***");
         }
+
+        [Fact]
+        public void GivenDestructuredObjectHasListOfNestedObjects()
+        {
+            var testObject = new TestObject();
+
+            _logger.Information("Test message {@TestObject}", testObject);
+
+            var elements = _sink
+                .Should()
+                .HaveMessage("Test message {@TestObject}")
+                .Appearing()
+                .Once()
+                .WithProperty("TestObject")
+                .HavingADestructuredObject()
+                .WithProperty("NestedList")
+                .Subject
+                .As<SequenceValue>()
+                .Elements;
+
+            foreach (var structureValue in elements.OfType<StructureValue>())
+            {
+                var testProperty = structureValue.Properties.Single(p => p.Name == "TestProperty");
+                testProperty.Value.ToString().Should().Be("\"***MASKED***\"");
+                var sensitiveProperty = structureValue.Properties.Single(p => p.Name == "SensitiveProperty");
+                sensitiveProperty.Value.ToString().Should().Be("\"***MASKED***\"");
+            }
+        }
+
+        [Fact]
+        public void GivenDestructuredObjectHasArrayOfNestedObjects()
+        {
+            var testObject = new TestObject();
+
+            _logger.Information("Test message {@TestObject}", testObject);
+
+            var elements = _sink
+                .Should()
+                .HaveMessage("Test message {@TestObject}")
+                .Appearing()
+                .Once()
+                .WithProperty("TestObject")
+                .HavingADestructuredObject()
+                .WithProperty("NestedArray")
+                .Subject
+                .As<SequenceValue>()
+                .Elements;
+
+            foreach (var structureValue in elements.OfType<StructureValue>())
+            {
+                var testProperty = structureValue.Properties.Single(p => p.Name == "TestProperty");
+                testProperty.Value.ToString().Should().Be("\"***MASKED***\"");
+                var sensitiveProperty = structureValue.Properties.Single(p => p.Name == "SensitiveProperty");
+                sensitiveProperty.Value.ToString().Should().Be("\"***MASKED***\"");
+            }
+        }
+
+        [Fact]
+        public void GivenDestructuredObjectHasCollectionOfNestedObjects()
+        {
+            var testObject = new TestObject();
+
+            _logger.Information("Test message {@TestObject}", testObject);
+
+            var elements = _sink
+                .Should()
+                .HaveMessage("Test message {@TestObject}")
+                .Appearing()
+                .Once()
+                .WithProperty("TestObject")
+                .HavingADestructuredObject()
+                .WithProperty("NestedCollection")
+                .Subject
+                .As<SequenceValue>()
+                .Elements;
+
+            foreach (var structureValue in elements.OfType<StructureValue>())
+            {
+                var testProperty = structureValue.Properties.Single(p => p.Name == "TestProperty");
+                testProperty.Value.ToString().Should().Be("\"***MASKED***\"");
+                var sensitiveProperty = structureValue.Properties.Single(p => p.Name == "SensitiveProperty");
+                sensitiveProperty.Value.ToString().Should().Be("\"***MASKED***\"");
+            }
+        }
+
+        [Fact]
+        public void GivenDestructuredObjectIsCollectionOfObjects()
+        {
+            var collection = new[] { new TestObject(), new TestObject() };
+
+            _logger.Information("Test message {@Collection}", collection);
+
+            var elements = _sink
+                .Should()
+                .HaveMessage("Test message {@Collection}")
+                .Appearing()
+                .Once()
+                .WithProperty("Collection")
+                .Subject
+                .As<SequenceValue>()
+                .Elements;
+
+            foreach (var structureValue in elements.OfType<StructureValue>())
+            {
+                var testProperty = structureValue.Properties.Single(p => p.Name == "TestProperty");
+                testProperty.Value.ToString().Should().Be("\"***MASKED***\"");
+                var sensitiveProperty = structureValue.Properties.Single(p => p.Name == "SensitiveProperty");
+                sensitiveProperty.Value.ToString().Should().Be("\"***MASKED***\"");
+            }
+        }
     }
 
     public class TestObject
@@ -114,10 +228,16 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         public string TestProperty { get; set; } = "james.bond@universalexports.com";
         public string SensitiveProperty { get; set; } = "Super sensitive data";
         public NestedTestObject Nested { get; set; } = new NestedTestObject();
+
+        public List<NestedTestObject> NestedList { get; set; } = new() { new NestedTestObject(), new NestedTestObject() };
+
+        public NestedTestObject[] NestedArray { get; set; } = { new NestedTestObject(), new NestedTestObject() };
+        public Collection<NestedTestObject> NestedCollection { get; set; } = new() { new NestedTestObject(), new NestedTestObject() };
     }
 
     public class NestedTestObject
     {
         public string TestProperty { get; set; } = "joe.blogs@example.com";
+        public string SensitiveProperty { get; set; } = "Super sensitive data";
     }
 }
