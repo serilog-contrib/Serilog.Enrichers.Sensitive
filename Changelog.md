@@ -1,5 +1,9 @@
 # Changelog for Serilog.Enrichers.Sensitive
 
+## 1.5.1 
+
+- Add support for dictionaries in destructured objects
+
 ## 1.5.0
 
 - Add support for collections in destructured objects

@@ -221,6 +221,38 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
                 sensitiveProperty.Value.ToString().Should().Be("\"***MASKED***\"");
             }
         }
+
+        [Fact]
+        public void GivenDestructuredObjectIsADictionary()
+        {
+            var dictionary = new Dictionary<string, string>
+            {
+                { "SensitiveProperty", "sensitive value"},
+                { "OtherProp", "not sensitive" }
+            };
+
+            _logger.Information("Test message {@Dictionary}", dictionary);
+
+            var dictionaryProperty = _sink
+                .Should()
+                .HaveMessage("Test message {@Dictionary}")
+                .Appearing()
+                .Once()
+                .WithProperty("Dictionary")
+                .Subject as DictionaryValue;
+
+            dictionaryProperty
+                .Elements[new ScalarValue("SensitiveProperty")]
+                .ToString()
+                .Should()
+                .Be("\"***MASKED***\"");
+
+            dictionaryProperty
+                .Elements[new ScalarValue("OtherProp")]
+                .ToString()
+                .Should()
+                .Be("\"not sensitive\"");
+        }
     }
 
     public class TestObject

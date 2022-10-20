@@ -161,6 +161,28 @@ namespace Serilog.Enrichers.Sensitive
 
                         return (anyMasked, new StructureValue(propList));
                     }
+                case DictionaryValue dictionaryValue:
+                {
+                    var resultDictionary = new List<KeyValuePair<ScalarValue, LogEventPropertyValue>>();
+                    var anyKeyMasked = false;
+
+                    foreach (var pair in dictionaryValue.Elements)
+                    {
+                        var (wasPairMasked, pairResult) = MaskProperty(new KeyValuePair<string, LogEventPropertyValue>(pair.Key.Value as string, pair.Value));
+
+                        if (wasPairMasked)
+                        {
+                            resultDictionary.Add(new KeyValuePair<ScalarValue, LogEventPropertyValue>(pair.Key, pairResult));
+                            anyKeyMasked = true;
+                        }
+                        else
+                        {
+                            resultDictionary.Add(new KeyValuePair<ScalarValue, LogEventPropertyValue>(pair.Key, pair.Value));
+                        }
+                    }
+
+                    return (anyKeyMasked, new DictionaryValue(resultDictionary));
+                }
                 default:
                     return (false, null);
             }
