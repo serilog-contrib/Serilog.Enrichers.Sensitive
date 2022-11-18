@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog.Core;
+using Serilog.Enrichers.Sensitive.MaskTypes;
 
 namespace Serilog.Enrichers.Sensitive.Demo
 {
@@ -10,18 +12,23 @@ namespace Serilog.Enrichers.Sensitive.Demo
 		static async Task Main(string[] args)
 		{
 			var logger = new LoggerConfiguration()
-				.Enrich.WithSensitiveDataMasking(MaskingMode.InArea, new IMaskingOperator[]
-				{
-					new EmailAddressMaskingOperator(),
-					new IbanMaskingOperator(),
-					new CreditCardMaskingOperator(false)
-				})
-				.WriteTo.Console()
+                .Enrich.WithSensitiveDataMasking(
+                        options =>
+                        {
+							options.MaskingOperators = new List<IMaskingOperator>
+								{
+									new EmailAddressMaskingOperator(new FixedValueMask("SPECIFIC VALUE")),
+									new IbanMaskingOperator(),
+									new CreditCardMaskingOperator()
+                                };
+                        })
+                .WriteTo.Console()
 				.CreateLogger();
 
 			logger.Information("Hello, world");
+            logger.Information("Example foo@bar.net");
 
-			using (logger.EnterSensitiveArea())
+            using (logger.EnterSensitiveArea())
 			{
 				// An e-mail address in text
 				logger.Information("This is a secret email address: james.bond@universal-exports.co.uk");

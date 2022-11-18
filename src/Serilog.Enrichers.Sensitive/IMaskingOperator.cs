@@ -3,6 +3,6 @@
 
 	public interface IMaskingOperator
     {
-        MaskingResult Mask(string input, string mask);
+        MaskingResult Mask(string input);
     }
 }

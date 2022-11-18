@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog.Enrichers.Sensitive.MaskTypes;
+using System;
 using System.Text.RegularExpressions;
 
 namespace Serilog.Enrichers.Sensitive
@@ -9,27 +10,28 @@ namespace Serilog.Enrichers.Sensitive
 	public abstract class RegexMaskingOperator : IMaskingOperator
 	{
 		private readonly Regex _regex;
-
-		protected RegexMaskingOperator(string regexString) 
-            : this(regexString, RegexOptions.Compiled)
+        private readonly IMaskType _maskType;
+        protected RegexMaskingOperator(string regexString, IMaskType maskType) 
+            : this(regexString, RegexOptions.Compiled, maskType)
 		{
 		}
 
-		protected RegexMaskingOperator(string regexString, RegexOptions options)
+		protected RegexMaskingOperator(string regexString, RegexOptions options, IMaskType maskType)
 		{
 			_regex = new Regex(regexString ?? throw new ArgumentNullException(nameof(regexString)), options);
-
-			if (string.IsNullOrWhiteSpace(regexString))
+			_maskType = maskType == null ? new FixedValueMask() : maskType;
+;
+            if (string.IsNullOrWhiteSpace(regexString))
 			{
 				throw new ArgumentOutOfRangeException(nameof(regexString), "Regex pattern cannot be empty or whitespace.");
 			}
 		}
 
-		public MaskingResult Mask(string input, string mask)
+		public MaskingResult Mask(string input)
 		{
 			var preprocessedInput = PreprocessInput(input);
 
-			if (!ShouldMaskInput(preprocessedInput))
+            if (!ShouldMaskInput(preprocessedInput))
 			{
 				return MaskingResult.NoMatch;
 			}
@@ -38,7 +40,7 @@ namespace Serilog.Enrichers.Sensitive
             {
                 if (ShouldMaskMatch(match))
                 {
-                    return match.Result(PreprocessMask(mask));
+                    return match.Result(PreprocessMask(_maskType.CreateMask(input)));
                 }
 
                 return match.Value;
@@ -83,5 +85,5 @@ namespace Serilog.Enrichers.Sensitive
         /// <returns><c>true</c> when the match should be masked, otherwise <c>false</c>. Defaults to <c>true</c></returns>
         /// <remarks>This method provides an extension point to short-circuit the masking operation if the value matches the regular expression but does not satisfy some additional criteria</remarks>
         protected virtual bool ShouldMaskMatch(Match match) => true;
-    }
+	}
 }

@@ -53,7 +53,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
                 .Be(Mask); // I don't even regex
         }
 
-        private const string Mask = "***MASK***";
+        private const string Mask = "***MASKED***";
 
         [Theory]
         [InlineData("email@example.com")]
@@ -113,7 +113,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
 
         private static string TheMaskedResultOf(string input)
         {
-            var maskingResult = new EmailAddressMaskingOperator().Mask(input, Mask);
+            var maskingResult = new EmailAddressMaskingOperator().Mask(input);
 
             return maskingResult.Match 
                 ? maskingResult.Result 

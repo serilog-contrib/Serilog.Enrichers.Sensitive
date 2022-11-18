@@ -1,5 +1,6 @@
-﻿using System;
-using FluentAssertions;
+﻿using FluentAssertions;
+using Serilog.Enrichers.Sensitive.MaskTypes;
+using System;
 using Xunit;
 
 namespace Serilog.Enrichers.Sensitive.Tests.Unit
@@ -8,7 +9,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
 	{
 		private class RegexExtenderWithOptions : RegexMaskingOperator
 		{
-			public RegexExtenderWithOptions(string regexPattern) : base(regexPattern)
+			public RegexExtenderWithOptions(string regexPattern) : base(regexPattern, new FixedValueMask())
 			{
 			}
 		}

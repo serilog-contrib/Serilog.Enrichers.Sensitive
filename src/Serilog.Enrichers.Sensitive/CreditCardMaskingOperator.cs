@@ -12,12 +12,12 @@ namespace Serilog.Enrichers.Sensitive
 
 		private readonly string _replacementPattern;
 
-		public CreditCardMaskingOperator() : this(true)
+		public CreditCardMaskingOperator(IMaskType maskType = null) : this(true)
 		{
 		}
 
-		public CreditCardMaskingOperator(bool fullMask) 
-			: base(fullMask ? CreditCardFullReplacePattern : CreditCardPartialReplacePattern, RegexOptions.IgnoreCase | RegexOptions.Compiled)
+		public CreditCardMaskingOperator(bool fullMask, IMaskType maskType = null) 
+			: base(fullMask ? CreditCardFullReplacePattern : CreditCardPartialReplacePattern, RegexOptions.IgnoreCase | RegexOptions.Compiled , maskType)
 		{
 			_replacementPattern = fullMask ? "{0}" : "${{leading4}}{0}${{trailing6}}";
 		}

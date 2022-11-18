@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Serilog.Enrichers.Sensitive.MaskTypes;
 using Serilog.Sinks.InMemory;
 using Serilog.Sinks.InMemory.Assertions;
 using Xunit;
@@ -59,11 +60,11 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
 
     internal class SpecificValueMaskingOperator : RegexMaskingOperator
     {
-        public SpecificValueMaskingOperator(string regexString) : base(regexString)
+        public SpecificValueMaskingOperator(string regexString) : base(regexString, new FixedValueMask())
         {
         }
 
-        public SpecificValueMaskingOperator(string regexString, RegexOptions options) : base(regexString, options)
+        public SpecificValueMaskingOperator(string regexString, RegexOptions options, IMaskType maskType = null) : base(regexString, options, maskType)
         {
         }
 

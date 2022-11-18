@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using FluentAssertions;
+using Serilog.Enrichers.Sensitive.MaskTypes;
 using Serilog.Sinks.InMemory;
 using Serilog.Sinks.InMemory.Assertions;
 using Xunit;
@@ -38,7 +40,13 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
             var inMemorySink = new InMemorySink();
 
             var logger =  new LoggerConfiguration()
-                .Enrich.WithSensitiveDataMasking("SPECIFIC VALUE")
+                .Enrich.WithSensitiveDataMasking(options =>
+                {
+                    options.MaskingOperators = new List<IMaskingOperator>
+                                {
+                                    new EmailAddressMaskingOperator(new FixedValueMask("SPECIFIC VALUE")),
+                                };
+                })
                 .WriteTo.Sink(inMemorySink)
                 .CreateLogger();
 
@@ -55,7 +63,13 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
             var inMemorySink = new InMemorySink();
 
             var logger =  new LoggerConfiguration()
-                .Enrich.WithSensitiveDataMasking("SPECIFIC VALUE")
+                .Enrich.WithSensitiveDataMasking(options =>
+                {
+                    options.MaskingOperators = new List<IMaskingOperator>
+                                {
+                                    new EmailAddressMaskingOperator(new FixedValueMask("SPECIFIC VALUE")),
+                                };
+                })
                 .WriteTo.Sink(inMemorySink)
                 .CreateLogger();
 

@@ -194,7 +194,7 @@ namespace Serilog.Enrichers.Sensitive
 
             foreach (var maskingOperator in _maskingOperators)
             {
-                var maskResult = maskingOperator.Mask(input, _maskValue);
+                var maskResult = maskingOperator.Mask(input);
 
                 if (maskResult.Match)
                 {
