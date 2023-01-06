@@ -118,7 +118,7 @@ new LoggerConfiguration()
                 // etc etc
             };
         });
-```csharp
+```
 
 It is also possible to not use any masking operators but instead mask based on property names. In that case you can configure the enricher to not use any masking operators at all:
 
@@ -130,7 +130,7 @@ new LoggerConfiguration()
         {
             options.MaskingOperators.Clear();
         });
-```csharp
+```
 
 ### Using a custom mask value
 
