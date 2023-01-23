@@ -20,6 +20,11 @@ namespace Serilog.Enrichers.Sensitive
         private readonly List<string> _maskProperties;
         private readonly List<string> _excludeProperties;
 
+        public SensitiveDataEnricher(SensitiveDataEnricherOptions options) 
+            : this(options.Apply)
+        {
+        }
+
         public SensitiveDataEnricher(
             Action<SensitiveDataEnricherOptions>? options)
         {

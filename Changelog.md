@@ -1,5 +1,9 @@
 # Changelog for Serilog.Enrichers.Sensitive
 
+## 1.7.0
+
+- Allow configuration through `appsettings.json` files.
+
 ## 1.6.0
 
 - Pass match to `PreprocessMask` to allow for further customisation of mask value

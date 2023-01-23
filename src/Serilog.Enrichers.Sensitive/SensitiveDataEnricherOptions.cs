@@ -31,5 +31,18 @@ namespace Serilog.Enrichers.Sensitive
         /// <para>This property takes precedence over <see cref="MaskProperties"/> and the masking operators.</para>
         /// </remarks>
         public List<string> ExcludeProperties { get; set; } = new List<string>();
+
+        /// <summary>
+        /// Applies the settings of this <c>SensitiveDataEnricherOptions</c> instance to another <c>SensitiveDataEnricherOptions</c> instance
+        /// </summary>
+        /// <param name="other">The <c>SensitiveDataEnricherOptions</c> to apply the options to</param>
+        public void Apply(SensitiveDataEnricherOptions other)
+        {
+            other.Mode = Mode;
+            other.MaskValue = MaskValue;
+            other.MaskingOperators = MaskingOperators;
+            other.MaskProperties = MaskProperties;
+            other.ExcludeProperties = ExcludeProperties;
+        }
     }
 }

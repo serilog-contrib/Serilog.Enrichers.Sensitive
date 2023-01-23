@@ -238,3 +238,33 @@ var logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateLogger();
 ```
+
+## JSON configuration
+
+If you are configuring your logger through `appsettings.json`, you can configure the enricher too. You will have to add a `Using` section if it doesn't exist already and include the `Serilog.Enrichers.Sensitive` assembly name there, otherwise configuration will silently fail.
+
+```json
+{
+  "Serilog": {
+    "Using": [
+      "Serilog.Enrichers.Sensitive"
+    ],
+    "Enrich": [
+      {
+        "Name": "WithSensitiveDataMasking",
+        "Args": {
+          "options": {
+            "MaskValue": "CUSTOM_MASK_FROM_JSON",
+            "ExcludeProperties": [
+              "email"
+            ],
+            "Mode": "Globally"
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+Note that `options` is the argument name of the `WithSensitiveDataMasking` extension method and must match exactly.
