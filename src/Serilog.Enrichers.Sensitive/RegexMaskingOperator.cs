@@ -38,7 +38,7 @@ namespace Serilog.Enrichers.Sensitive
             {
                 if (ShouldMaskMatch(match))
                 {
-                    return match.Result(PreprocessMask(mask));
+                    return match.Result(PreprocessMask(PreprocessMask(mask), match));
                 }
 
                 return match.Value;
@@ -75,6 +75,14 @@ namespace Serilog.Enrichers.Sensitive
 		/// <param name="mask">The mask value as specified on the <see cref="SensitiveDataEnricherOptions"/></param>
         /// <returns>The processed mask, defaults to no pre-processing and returns the input</returns>
 		protected virtual string PreprocessMask(string mask) => mask;
+
+        /// <summary>
+        /// Perform any operations on the mask before masking the matched value
+        /// </summary>
+        /// <param name="mask">The mask value as specified on the <see cref="SensitiveDataEnricherOptions"/></param>
+        /// <param name="match">The regex match</param>
+        /// <returns>The processed mask, defaults to no pre-processing and returns the input</returns>
+        protected virtual string PreprocessMask(string mask, Match match) => mask;
 
 		/// <summary>
 		/// Indicate whether the operator should continue with masking the matched value from the input

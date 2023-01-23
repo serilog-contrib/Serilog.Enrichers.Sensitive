@@ -118,7 +118,7 @@ new LoggerConfiguration()
                 // etc etc
             };
         });
-```csharp
+```
 
 It is also possible to not use any masking operators but instead mask based on property names. In that case you can configure the enricher to not use any masking operators at all:
 
@@ -130,7 +130,7 @@ new LoggerConfiguration()
         {
             options.MaskingOperators.Clear();
         });
-```csharp
+```
 
 ### Using a custom mask value
 
@@ -148,6 +148,28 @@ A example rendered message would then look like:
 `This is a sensitive value: **`
 
 You can specify any mask string as long as it's non-null or an empty string.
+
+#### Customising the mask value based on the matched value
+
+In situations where you want to change the mask and have it include parts of the matched value you can override the `PreprocessMask` method that takes both `mask` and `match` parameters. This allows you to perform more masks that are more dynamic.
+
+For example: mask only the "user" part of an e-mail address.
+
+```csharp
+public class CustomizedEmailAddressMaskingOperator : EmailAddressMaskingOperator
+{
+    protected override PreprocessMask(string mask, Match match)
+    {
+        var parts = match.Value.Split('@');
+
+        return mask + "@" + parts[1];
+    }
+}
+```
+
+When the mask is `***MASKED***` and we pass in `james.bond@universalexports.co.uk` the result will be `***MASKED***@universalexports.co.uk`.
+
+Note that this example uses `EmailAddressMaskingOperator` which has a fairly complex regular expression. If possible change your regular expression to have match groups so you can more easily access them through the `match` parameter.
 
 ### Always mask a property
 

@@ -1,5 +1,9 @@
 # Changelog for Serilog.Enrichers.Sensitive
 
+## 1.6.0
+
+- Pass match to `PreprocessMask` to allow for further customisation of mask value
+
 ## 1.5.1 
 
 - Add support for dictionaries in destructured objects
