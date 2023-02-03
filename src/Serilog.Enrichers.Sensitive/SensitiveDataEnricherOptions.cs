@@ -1,10 +1,69 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Serilog.Enrichers.Sensitive
 {
     public class SensitiveDataEnricherOptions
     {
+        public SensitiveDataEnricherOptions(
+            MaskingMode mode = MaskingMode.Globally, 
+            string maskValue = SensitiveDataEnricher.DefaultMaskValue, 
+            IEnumerable<string>? maskingOperators = null,
+            IEnumerable<string>? maskProperties = null, 
+            IEnumerable<string>? excludeProperties = null)
+        {
+            Mode = mode;
+            MaskValue = maskValue;
+            MaskingOperators = maskingOperators == null ? new List<IMaskingOperator>() : ResolveMaskingOperators(maskingOperators);
+            MaskProperties = maskProperties?.ToList() ?? new List<string>();
+            ExcludeProperties = excludeProperties?.ToList() ?? new List<string>();
+        }
+
+        private static List<IMaskingOperator> ResolveMaskingOperators(IEnumerable<string> maskingOperatorTypeNames)
+        {
+            var maskingOperators = new List<IMaskingOperator>();
+
+            foreach (var typeName in maskingOperatorTypeNames)
+            {
+                if (string.IsNullOrWhiteSpace(typeName))
+                {
+                    continue;
+                }
+
+                var type = Type.GetType(
+                    typeName,
+                    Assembly.Load,
+                    (assembly, fullTypeName, _) =>
+                    {
+                        if (assembly == null)
+                        {
+                            return null;
+                        }
+
+                        var singleOrDefault = assembly.GetTypes().SingleOrDefault(t => t.FullName == fullTypeName);
+                        
+                        return singleOrDefault;
+                    });
+
+                if (type == null)
+                {
+                    throw new Exception(
+                        $"Could not find the masking operator type '{typeName}', check if the type name matches 'Assembly.Namespace.TypeName, Assembly' format and that the assembly can be resolved by the application (i.e. in the same folder)");
+                }
+
+                var instance = Activator.CreateInstance(type);
+
+                if (instance != null)
+                {
+                    maskingOperators.Add((IMaskingOperator)instance);
+                }
+            }
+
+            return maskingOperators;
+        }
+
         /// <summary>
         /// Sets whether masking should happen for all log messages ('Globally') or only in sensitive areas ('SensitiveArea')
         /// </summary>

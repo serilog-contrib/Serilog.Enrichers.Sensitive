@@ -1,5 +1,9 @@
 # Changelog for Serilog.Enrichers.Sensitive
 
+## 1.7.1
+
+- Support confguring masking operators using [Serilog.Settings.Configuration](https://github.com/serilog/serilog-settings-configuration) (mainly `appsettings.json`)
+
 ## 1.7.0
 
 - Allow configuration through `appsettings.json` files.

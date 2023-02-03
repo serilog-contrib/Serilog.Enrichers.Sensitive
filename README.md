@@ -268,3 +268,30 @@ If you are configuring your logger through `appsettings.json`, you can configure
 ```
 
 Note that `options` is the argument name of the `WithSensitiveDataMasking` extension method and must match exactly.
+
+### Masking operators
+
+To configure masking operators you will need to specify the fully qualified name of the masking operator type. For example: `MyApplication.Logging.Serilog.MyCustomMaskingOperator, MyAppliation.Logging` for the type `MyCustomMaskingOperator` in the `MyApplication.Logging` assembly.
+
+An example config file:
+
+```json
+{
+  "Serilog": {
+    "Using": [
+      "Serilog.Enrichers.Sensitive"
+    ],
+    "Enrich": [
+      {
+        "Name": "WithSensitiveDataMasking",
+        "Args": {
+          "options": {
+            "MaskValue": "CUSTOM_MASK_FROM_JSON",
+            "MaskingOperators": [ "MyApplication.Logging.Serilog.MyCustomMaskingOperator, MyAppliation.Logging" ]
+          }
+        }
+      }
+    ]
+  }
+}
+```

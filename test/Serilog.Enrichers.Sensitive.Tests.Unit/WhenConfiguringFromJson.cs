@@ -10,7 +10,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit;
 public class WhenConfiguringFromJson
 {
     [Fact]
-    public void GivenJsonConfigurationWithMaskValue_EnricherIsConfiguredWithTheCorrectMaskValue()
+    public void GivenJsonConfigurationWithMaskingOperator_MaskingOperatorIsUsedAndFullMessageIsMasked()
     {
         var jsonConfiguration = @"
 {
@@ -20,9 +20,8 @@ public class WhenConfiguringFromJson
         ""Name"": ""WithSensitiveDataMasking"",
         ""Args"": {
             ""options"": {
-                ""MaskValue"": ""^^"",
-                ""ExcludeProperties"": [ ""email"" ],
-                ""Mode"": ""Globally""
+                ""MaskValue"": ""MASK FROM JSON"",
+                ""MaskingOperators"": [ ""Serilog.Enrichers.Sensitive.Tests.Unit.MyTestMaskingOperator, Serilog.Enrichers.Sensitive.Tests.Unit"" ]
             }
         }
     }]
@@ -44,11 +43,25 @@ public class WhenConfiguringFromJson
             .WriteTo.Sink(inMemorySink)
             .CreateLogger();
 
-        logger.Information("Test value foo@bar.net");
+        logger.Information("A test message");
 
         inMemorySink
             .Should()
-            .HaveMessage("Test value ^^", "the e-mail address is replaced with the configured masking value")
+            .HaveMessage("MASK FROM JSON", "the custom masking operator matches everything")
             .Appearing().Once();
+    }
+}
+
+public class MyTestMaskingOperator : IMaskingOperator
+{
+    public static IMaskingOperator Instance = new MyTestMaskingOperator();
+        
+    public MaskingResult Mask(string input, string mask)
+    {
+        return new MaskingResult
+        {
+            Match = true,
+            Result = mask
+        };
     }
 }

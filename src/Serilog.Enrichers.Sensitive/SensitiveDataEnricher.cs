@@ -28,7 +28,12 @@ namespace Serilog.Enrichers.Sensitive
         public SensitiveDataEnricher(
             Action<SensitiveDataEnricherOptions>? options)
         {
-            var enricherOptions = new SensitiveDataEnricherOptions();
+            var enricherOptions = new SensitiveDataEnricherOptions(
+                MaskingMode.Globally, 
+                DefaultMaskValue, 
+                DefaultOperators.Select(o => o.GetType().AssemblyQualifiedName),
+                new List<string>(),
+                new List<string>());
 
             if (options != null)
             {
