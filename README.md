@@ -158,7 +158,7 @@ For example: mask only the "user" part of an e-mail address.
 ```csharp
 public class CustomizedEmailAddressMaskingOperator : EmailAddressMaskingOperator
 {
-    protected override PreprocessMask(string mask, Match match)
+    protected override string PreprocessMask(string mask, Match match)
     {
         var parts = match.Value.Split('@');
 
