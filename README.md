@@ -102,6 +102,7 @@ By default the enricher uses the following masking operators:
 - EmailAddressMaskingOperator
 - IbanMaskingOperator
 - CreditCardMaskingOperator
+- PathMaskingOperator
 
 It's good practice to only configure the masking operators that are applicable for your application. For example:
 
