@@ -8,11 +8,11 @@
 
 	<PropertyGroup>
 		<IsPackable>true</IsPackable>
-		<Version Condition="'$(Version)' == ''">0.1.0.0</Version>
+		<Version Condition="'$(Version)' == ''">0.2.0.0</Version>
 		<Title>Serilog enricher to mask sensitive data</Title>
 		<Description>An enricher to be used for masking sensitive (PII) data using Serilog</Description>
 		<Copyright Condition="'$(Copyright)' == ''">2021 Sander van Vliet</Copyright>
-		<Authors Condition="'$(Authors)' == ''">Sander van Vliet, Huibert Jan Nieuwkamer, Scott Toberman</Authors>
+		<Authors Condition="'$(Authors)' == ''">Sander van Vliet, Huibert Jan Nieuwkamer, Scott Toberman, sunnamed434</Authors>
 		<PackageProjectUrl>https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/README.md</PackageProjectUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<RepositoryUrl>https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/</RepositoryUrl>
