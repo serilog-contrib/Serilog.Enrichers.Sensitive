@@ -9,6 +9,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Benchmark
             BenchmarkRunner.Run<BenchmarkCompiledEmailRegex>();
             BenchmarkRunner.Run<BenchmarkCompiledIbanRegex>();
             BenchmarkRunner.Run<CreditCardMarkingBenchmarks>();
+            BenchmarkRunner.Run<PathMaskingOperatorBenchmarks>();
         }
     }
 }
