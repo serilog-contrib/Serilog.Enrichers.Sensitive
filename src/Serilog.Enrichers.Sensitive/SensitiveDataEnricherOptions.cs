@@ -7,12 +7,19 @@ namespace Serilog.Enrichers.Sensitive
 {
     public class SensitiveDataEnricherOptions
     {
+        private string[] _operators;
+
+        public SensitiveDataEnricherOptions()
+        {
+        }
+
         public SensitiveDataEnricherOptions(
             MaskingMode mode = MaskingMode.Globally, 
             string maskValue = SensitiveDataEnricher.DefaultMaskValue, 
             IEnumerable<string>? maskingOperators = null,
             IEnumerable<string>? maskProperties = null, 
-            IEnumerable<string>? excludeProperties = null)
+            IEnumerable<string>? excludeProperties = null,
+            IEnumerable<string>? operators = null)
         {
             Mode = mode;
             MaskValue = maskValue;
@@ -91,6 +98,22 @@ namespace Serilog.Enrichers.Sensitive
         /// </remarks>
         public List<string> ExcludeProperties { get; set; } = new List<string>();
 
+        public string[] Operators
+        {
+            get
+            {
+                return _operators;
+            }
+            set
+            {
+                _operators = value;
+                if (value != null)
+                {
+                    MaskingOperators = ResolveMaskingOperators(value);
+                }
+            }
+        }
+
         /// <summary>
         /// Applies the settings of this <c>SensitiveDataEnricherOptions</c> instance to another <c>SensitiveDataEnricherOptions</c> instance
         /// </summary>
@@ -102,6 +125,7 @@ namespace Serilog.Enrichers.Sensitive
             other.MaskingOperators = MaskingOperators;
             other.MaskProperties = MaskProperties;
             other.ExcludeProperties = ExcludeProperties;
+            other.Operators = Operators;
         }
     }
 }
