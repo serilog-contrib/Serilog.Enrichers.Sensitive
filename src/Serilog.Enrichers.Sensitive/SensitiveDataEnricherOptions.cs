@@ -7,8 +7,9 @@ namespace Serilog.Enrichers.Sensitive
 {
     public class SensitiveDataEnricherOptions
     {
-        private string[] _operators;
+        private string[]? _operators;
 
+        // ReSharper disable once UnusedMember.Global as this only exists to support JSON configuration. See issue #25
         public SensitiveDataEnricherOptions()
         {
         }
@@ -19,6 +20,7 @@ namespace Serilog.Enrichers.Sensitive
             IEnumerable<string>? maskingOperators = null,
             IEnumerable<string>? maskProperties = null, 
             IEnumerable<string>? excludeProperties = null,
+            // ReSharper disable once UnusedParameter.Local as this only exists to support JSON configuration, see the Operators property below 
             IEnumerable<string>? operators = null)
         {
             Mode = mode;
@@ -98,12 +100,12 @@ namespace Serilog.Enrichers.Sensitive
         /// </remarks>
         public List<string> ExcludeProperties { get; set; } = new List<string>();
 
-        public string[] Operators
+        /// <remarks>
+        /// This property only exists to support JSON configuration of the enricher. If you are configuring the enricher from code you'll want <see cref="MaskingOperators"/> instead.
+        /// </remarks>
+        public string[]? Operators
         {
-            get
-            {
-                return _operators;
-            }
+            get => _operators;
             set
             {
                 _operators = value;
