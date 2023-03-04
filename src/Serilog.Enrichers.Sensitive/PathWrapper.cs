@@ -4,6 +4,8 @@ namespace Serilog.Enrichers.Sensitive;
 
 public class PathWrapper : IPathWrapper
 {
+    public static readonly PathWrapper Instance = new();
+    
     public bool IsDirectory(string path)
     {
         return Path.GetExtension(path) == string.Empty;
