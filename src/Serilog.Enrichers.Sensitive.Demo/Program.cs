@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using Serilog.Core;
 
@@ -13,7 +14,8 @@ namespace Serilog.Enrichers.Sensitive.Demo
 				{
 					new EmailAddressMaskingOperator(),
 					new IbanMaskingOperator(),
-					new CreditCardMaskingOperator(false)
+					new CreditCardMaskingOperator(false),
+					new PathMaskingOperator()
 				})
 				.WriteTo.Console()
 				.CreateLogger();
@@ -43,16 +45,24 @@ namespace Serilog.Enrichers.Sensitive.Demo
 					Key = 12345, XmlValue = "<MyElement><CreditCard>4111111111111111</CreditCard></MyElement>"
 				};
 				logger.Information("Object dump with embedded credit card: {x}", x);
+				
+				// Path to the file is also masked
+				logger.Information("This is path to the file: {0}",
+					@"E:\SuperSecretPath\test.txt");
+				
+				// Path to the directory is also masked
+				logger.Information("This is path to the directory: {0}", @"C:\Admin\");
 
 			}
 
 			// But outside the sensitive area nothing is masked
 			logger.Information("Felix can be reached at felix@cia.gov");
 
+			logger.Information("This is your path to the file: {file}", new FileInfo("test.txt").FullName);
 
 			// Now, show that this works for async contexts too
 			logger.Information("Now, show the Async works");
-
+			
 			var t1 = LogAsSensitiveAsync(logger);
 			var t2 = LogAsUnsensitiveAsync(logger);
 
