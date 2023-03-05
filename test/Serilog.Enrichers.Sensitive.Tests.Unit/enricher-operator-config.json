@@ -1,0 +1,14 @@
+﻿{
+  "Serilog": {
+    "Using": [ "Serilog.Enrichers.Sensitive" ],
+    "Enrich": [ {
+        "Name": "WithSensitiveDataMasking",
+        "Args": {
+            "options": {
+                "MaskValue": "MASK FROM JSON",
+                "Operators": [ "Serilog.Enrichers.Sensitive.Tests.Unit.MyTestMaskingOperator, Serilog.Enrichers.Sensitive.Tests.Unit" ]
+            }
+        }
+    }]
+  }
+}

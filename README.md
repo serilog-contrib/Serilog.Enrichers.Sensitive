@@ -288,7 +288,7 @@ An example config file:
         "Args": {
           "options": {
             "MaskValue": "CUSTOM_MASK_FROM_JSON",
-            "MaskingOperators": [ "MyApplication.Logging.Serilog.MyCustomMaskingOperator, MyAppliation.Logging" ]
+            "Operators": [ "MyApplication.Logging.Serilog.MyCustomMaskingOperator, MyAppliation.Logging" ]
           }
         }
       }
@@ -296,3 +296,5 @@ An example config file:
   }
 }
 ```
+
+> **Warning:** Contrary to what you might expect, for JSON configuration `Operators` should be used instead of `MaskingOperators`.

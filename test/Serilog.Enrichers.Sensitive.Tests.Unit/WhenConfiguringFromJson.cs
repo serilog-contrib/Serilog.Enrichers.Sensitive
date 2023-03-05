@@ -1,6 +1,4 @@
-﻿using System.IO;
-using System.Text;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Serilog.Sinks.InMemory;
 using Serilog.Sinks.InMemory.Assertions;
 using Xunit;
@@ -12,28 +10,8 @@ public class WhenConfiguringFromJson
     [Fact]
     public void GivenJsonConfigurationWithMaskingOperator_MaskingOperatorIsUsedAndFullMessageIsMasked()
     {
-        var jsonConfiguration = @"
-{
-  ""Serilog"": {
-    ""Using"": [ ""Serilog.Enrichers.Sensitive"" ],
-    ""Enrich"": [ {
-        ""Name"": ""WithSensitiveDataMasking"",
-        ""Args"": {
-            ""options"": {
-                ""MaskValue"": ""MASK FROM JSON"",
-                ""MaskingOperators"": [ ""Serilog.Enrichers.Sensitive.Tests.Unit.MyTestMaskingOperator, Serilog.Enrichers.Sensitive.Tests.Unit"" ]
-            }
-        }
-    }]
-  }
-}
-";
-        var memoryStream = new MemoryStream();
-        memoryStream.Write(Encoding.UTF8.GetBytes(jsonConfiguration));
-        memoryStream.Seek(0, SeekOrigin.Begin);
-
         var configuration = new ConfigurationBuilder()
-            .AddJsonStream(memoryStream)
+            .AddJsonFile("enricher-operator-config.json")
             .Build();
 
         var inMemorySink = new InMemorySink();
@@ -50,12 +28,42 @@ public class WhenConfiguringFromJson
             .HaveMessage("MASK FROM JSON", "the custom masking operator matches everything")
             .Appearing().Once();
     }
+
+    [Fact]
+    public void ReproCaseIssue25()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddJsonFile("enricher-config.json")
+            .Build();
+
+        var inMemorySink = new InMemorySink();
+
+        var logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(configuration)
+            .WriteTo.Sink(inMemorySink)
+            .CreateLogger();
+
+        logger.Information("A test message {secret}", "this is secret");
+
+        inMemorySink
+            .Should()
+            .HaveMessage("A test message {secret}")
+            .Appearing().Once()
+            .WithProperty("secret")
+            .WithValue("**SECRET**");
+    }
 }
 
 public class MyTestMaskingOperator : IMaskingOperator
 {
+    private readonly bool _flip;
+
     public static IMaskingOperator Instance = new MyTestMaskingOperator();
-        
+
+    public MyTestMaskingOperator()
+    {
+    }
+
     public MaskingResult Mask(string input, string mask)
     {
         return new MaskingResult

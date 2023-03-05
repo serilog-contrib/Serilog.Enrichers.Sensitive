@@ -1,0 +1,20 @@
+﻿{
+  "Serilog": {
+    "Using": [
+      "Serilog.Enrichers.Sensitive"
+    ],
+    "Enrich": [
+      {
+        "Name": "WithSensitiveDataMasking",
+        "Args": {
+          "options": {
+            "MaskValue": "**SECRET**",
+            "MaskProperties": [
+              "secret"
+            ]
+          }
+        }
+      }
+    ]
+  }
+}
