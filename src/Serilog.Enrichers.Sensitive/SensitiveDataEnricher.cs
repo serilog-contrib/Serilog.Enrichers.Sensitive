@@ -130,6 +130,17 @@ namespace Serilog.Enrichers.Sensitive
                         }
 
                         return (false, null);
+                    }    
+                case ScalarValue { Value: Uri uriValue }: // обработки этого случая нет в исходной библиотеке
+                    {
+                        var (wasMasked, maskedValue) = ReplaceSensitiveDataFromString(uriValue.ToString(C));
+
+                        if (wasMasked)
+                        {
+                            return (true, new ScalarValue(maskedValue));
+                        }
+
+                        return (false, null);
                     }
                 case SequenceValue sequenceValue:
                     var resultElements = new List<LogEventPropertyValue>();
