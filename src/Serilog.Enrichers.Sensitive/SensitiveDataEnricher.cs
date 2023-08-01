@@ -133,7 +133,7 @@ namespace Serilog.Enrichers.Sensitive
                     }    
                 case ScalarValue { Value: Uri uriValue }:
                     {
-                        var (wasMasked, maskedValue) = ReplaceSensitiveDataFromString(uriValue.ToString(C));
+                        var (wasMasked, maskedValue) = ReplaceSensitiveDataFromString(uriValue.ToString());
 
                         if (wasMasked)
                         {
