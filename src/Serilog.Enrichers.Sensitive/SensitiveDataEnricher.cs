@@ -131,6 +131,21 @@ namespace Serilog.Enrichers.Sensitive
 
                         return (false, null);
                     }
+                // System.Uri is a built-in scalar type in Serilog:
+                // https://github.com/serilog/serilog/blob/dev/src/Serilog/Capturing/PropertyValueConverter.cs#L23
+                // which is why this needs special handling and isn't
+                // caught by the string value above.
+                case ScalarValue { Value: Uri uriValue }:
+                {
+                    var (wasMasked, maskedValue) = ReplaceSensitiveDataFromString(uriValue.ToString());
+
+                    if (wasMasked)
+                    {
+                        return (true, new ScalarValue(new Uri(maskedValue)));
+                    }
+
+                    return (false, null);
+                }
                 case SequenceValue sequenceValue:
                     var resultElements = new List<LogEventPropertyValue>();
                     var anyElementMasked = false;
