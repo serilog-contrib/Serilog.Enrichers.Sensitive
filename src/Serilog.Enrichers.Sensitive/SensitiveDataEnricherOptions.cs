@@ -26,7 +26,7 @@ namespace Serilog.Enrichers.Sensitive
             Mode = mode;
             MaskValue = maskValue;
             MaskingOperators = maskingOperators == null ? new List<IMaskingOperator>() : ResolveMaskingOperators(maskingOperators);
-            MaskProperties = maskProperties?.ToList() ?? new List<string>();
+            MaskProperties = maskProperties == null ? new MaskPropertyCollection() : MaskPropertyCollection.From(maskProperties);
             ExcludeProperties = excludeProperties?.ToList() ?? new List<string>();
         }
 
@@ -90,7 +90,7 @@ namespace Serilog.Enrichers.Sensitive
         /// The list of properties that should always be masked regardless of whether they match the pattern of any of the masking operators
         /// </summary>
         /// <remarks>The property name is case-insensitive, when the property is present on the log message it will always be masked even if it is empty</remarks>
-        public List<string> MaskProperties { get; set; } = new List<string>();
+        public MaskPropertyCollection MaskProperties { get; set; } = new();
         /// <summary>
         /// The list of properties that should never be masked
         /// </summary>
@@ -98,7 +98,7 @@ namespace Serilog.Enrichers.Sensitive
         /// <para>The property name is case-insensitive, when the property is present on the log message it will always be masked even if it is empty.</para>
         /// <para>This property takes precedence over <see cref="MaskProperties"/> and the masking operators.</para>
         /// </remarks>
-        public List<string> ExcludeProperties { get; set; } = new List<string>();
+        public List<string> ExcludeProperties { get; set; } = new();
 
         /// <remarks>
         /// This property only exists to support JSON configuration of the enricher. If you are configuring the enricher from code you'll want <see cref="MaskingOperators"/> instead.
@@ -129,5 +129,20 @@ namespace Serilog.Enrichers.Sensitive
             other.ExcludeProperties = ExcludeProperties;
             other.Operators = Operators;
         }
+    }
+
+    public class MaskProperty
+    {
+        public MaskProperty()
+        {
+        }
+
+        public MaskProperty(string propertyName)
+        {
+            Name = propertyName;
+        }
+
+        public string Name { get; set; }
+        public MaskOptions Options { get; set; } = MaskOptions.Default;
     }
 }
