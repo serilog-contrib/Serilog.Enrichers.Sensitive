@@ -1,5 +1,9 @@
 # Changelog for Serilog.Enrichers.Sensitive
 
+## 1.7.3
+
+- Add support for masking property values that contain a `Uri`, reported by @yadanilov19
+
 ## 1.7.2
 
 - FIx issue where Microsoft.Extensions.Configuration.Binder version 7.0.0 or up was required for JSON configuration to work. [#25](https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/issues/25)

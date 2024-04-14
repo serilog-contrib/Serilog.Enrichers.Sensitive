@@ -12,12 +12,13 @@ namespace Serilog.Enrichers.Sensitive
     {
         private readonly MaskingMode _maskingMode;
         public const string DefaultMaskValue = "***MASKED***";
+        private const string DefaultMaskPad = "***";
 
         private static readonly MessageTemplateParser Parser = new();
         private readonly FieldInfo _messageTemplateBackingField;
         private readonly List<IMaskingOperator> _maskingOperators;
         private readonly string _maskValue;
-        private readonly List<string> _maskProperties;
+        private readonly MaskPropertyCollection _maskProperties;
         private readonly List<string> _excludeProperties;
 
         public SensitiveDataEnricher(SensitiveDataEnricherOptions options) 
@@ -113,9 +114,22 @@ namespace Serilog.Enrichers.Sensitive
                 return (false, null);
             }
 
-            if (_maskProperties.Contains(property.Key, StringComparer.InvariantCultureIgnoreCase))
+            if(_maskProperties.TryGetProperty(property.Key, out var options))
             {
-                return (true, new ScalarValue(_maskValue));
+                if (options == MaskOptions.Default)
+                {
+                    return (true, new ScalarValue(_maskValue));
+                }
+
+                switch (property.Value)
+                {
+                    case ScalarValue { Value: string stringValue }:
+                        return (true, new ScalarValue(MaskWithOptions(_maskValue, options, stringValue)));
+                    case ScalarValue { Value: Uri uriValue } when options is UriMaskOptions uriMaskOptions:
+                        return (true, new ScalarValue(MaskWithUriOptions(_maskValue, uriMaskOptions, uriValue)));
+                    case ScalarValue { Value: Uri uriValue }:
+                        return (true, new ScalarValue(MaskWithOptions(_maskValue, options, uriValue.ToString())));
+                }
             }
 
             switch (property.Value)
@@ -131,6 +145,21 @@ namespace Serilog.Enrichers.Sensitive
 
                         return (false, null);
                     }
+                // System.Uri is a built-in scalar type in Serilog:
+                // https://github.com/serilog/serilog/blob/dev/src/Serilog/Capturing/PropertyValueConverter.cs#L23
+                // which is why this needs special handling and isn't
+                // caught by the string value above.
+                case ScalarValue { Value: Uri uriValue }:
+                {
+                    var (wasMasked, maskedValue) = ReplaceSensitiveDataFromString(uriValue.ToString());
+
+                    if (wasMasked)
+                    {
+                        return (true, new ScalarValue(new Uri(maskedValue)));
+                    }
+
+                    return (false, null);
+                }
                 case SequenceValue sequenceValue:
                     var resultElements = new List<LogEventPropertyValue>();
                     var anyElementMasked = false;
@@ -196,6 +225,101 @@ namespace Serilog.Enrichers.Sensitive
                 default:
                     return (false, null);
             }
+        }
+
+        private string MaskWithUriOptions(string maskValue, UriMaskOptions options, Uri uri)
+        {
+            var scheme = options.ShowScheme
+                ? uri.Scheme
+                : DefaultMaskPad;
+
+            var host = options.ShowHost
+                ? uri.Host
+                : DefaultMaskPad;
+
+            var path = options.ShowPath
+                ? uri.AbsolutePath
+                : "/" + DefaultMaskPad;
+
+            var queryString = !string.IsNullOrEmpty(uri.Query)
+                ? options.ShowQueryString
+                    ? uri.Query
+                    : "?" + DefaultMaskPad
+                : "";
+
+            return $"{scheme}://{host}{path}{queryString}";
+        }
+
+        private string MaskWithOptions(string maskValue, MaskOptions options, string input)
+        {
+            if (options is { ShowFirst: >= 0, ShowLast: < 0 })
+            {
+                var start = options.ShowFirst;
+                if (start >= input.Length)
+                {
+                    start = 1;
+                }
+
+                var first = input.Substring(0, start);
+                if (options.PreserveLength)
+                {
+                    return first.PadRight(input.Length, '*');
+                }
+
+                return first + DefaultMaskPad;
+            }
+
+            if (options is { ShowFirst: < 0, ShowLast: >= 0 })
+            {
+                var end = input.Length - options.ShowLast;
+                if (end <= 0)
+                {
+                    end = input.Length - 1;
+                }
+
+                var last = input.Substring(end);
+
+                if (options.PreserveLength)
+                {
+                    return last.PadLeft(input.Length, '*');
+                }
+
+                return DefaultMaskPad + last;
+            }
+
+            if (options is { ShowFirst: >= 0, ShowLast: >= 0 })
+            {
+                if (options.ShowFirst + options.ShowLast >= input.Length)
+                {
+                    if (input.Length > 3)
+                    {
+                        return input[0] + DefaultMaskPad + input.Last();
+                    }
+
+                    if (input.Length == 3)
+                    {
+                        return input[0] + DefaultMaskPad;
+                    }
+
+                    if (input.Length <= 2)
+                    {
+                        return maskValue;
+                    }
+                }
+
+                var start = options.ShowFirst;
+                var end = input.Length - options.ShowLast;
+                var pad = input.Length - (input.Length - end);
+
+                if (options.PreserveLength)
+                {
+                    return input.Substring(0, start).PadRight(pad, '*') + input.Substring(end);
+                }
+                
+                return input.Substring(0, start) + DefaultMaskPad + input.Substring(end);
+            }
+
+            return maskValue;
         }
 
         private (bool, string) ReplaceSensitiveDataFromString(string input)
