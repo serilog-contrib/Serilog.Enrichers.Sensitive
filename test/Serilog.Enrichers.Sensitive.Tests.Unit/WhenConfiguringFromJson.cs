@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using Serilog.Events;
 using Serilog.Sinks.InMemory;
 using Serilog.Sinks.InMemory.Assertions;
 using Xunit;
