@@ -11,7 +11,7 @@ namespace Serilog.Enrichers.Sensitive
         {
         }
 
-        protected override string PreprocessInput(string input)
+        protected override string PreprocessInput(string input, string? propertyName = null)
         {
 	        if (input.Contains("%40"))
 	        {
@@ -20,7 +20,7 @@ namespace Serilog.Enrichers.Sensitive
 	        return input;
         }
 
-        protected override bool ShouldMaskInput(string input)
+        protected override bool ShouldMaskInput(string input, string? propertyName = null)
         {
 	        return input.Contains("@");
         }

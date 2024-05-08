@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Serilog.Events;
 using Serilog.Sinks.InMemory;
 using Serilog.Sinks.InMemory.Assertions;
 using Xunit;
@@ -71,5 +72,15 @@ public class MyTestMaskingOperator : IMaskingOperator
             Match = true,
             Result = mask
         };
+    }
+
+    public MaskingResult MaskProperty(string propertyName, string input, string mask)
+    {
+        return Mask(input, mask);
+    }
+
+    public MaskingResult MaskMessage(string input, string mask)
+    {
+        return Mask(input, mask);
     }
 }

@@ -8,7 +8,11 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         [Fact]
         public void GivenSimpleMailAddress_AddressIsMasked()
         {
-            TheMaskedResultOf("simple@email.com")
+            ThePropertyMaskedResultOf("anyPropertyName", "simple@email.com")
+                .Should()
+                .Be(Mask);
+
+            TheMessageMaskedResultOf("simple@email.com")
                 .Should()
                 .Be(Mask);
         }
@@ -16,7 +20,11 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         [Fact]
         public void GivenSimpleMailAddressButUppercase_AddressIsMasked()
         {
-            TheMaskedResultOf("SIMPLE@email.com")
+            ThePropertyMaskedResultOf("anyPropertyName", "SIMPLE@email.com")
+                .Should()
+                .Be(Mask);
+
+            TheMessageMaskedResultOf("SIMPLE@email.com")
                 .Should()
                 .Be(Mask);
         }
@@ -24,7 +32,11 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         [Fact]
         public void GivenEmailAddressWithBoxQualifier_AddressIsMasked()
         {
-            TheMaskedResultOf("test+spamfolder@email.com")
+            ThePropertyMaskedResultOf("anyPropertyName", "test+spamfolder@email.com")
+                .Should()
+                .Be(Mask);
+
+            TheMessageMaskedResultOf("test+spamfolder@email.com")
                 .Should()
                 .Be(Mask);
         }
@@ -32,7 +44,11 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         [Fact]
         public void GivenEmailAddressWithSubdomains_AddressIsMasked()
         {
-            TheMaskedResultOf("test@sub.sub.sub.email.com")
+            ThePropertyMaskedResultOf("anyPropertyName", "test@sub.sub.sub.email.com")
+                .Should()
+                .Be(Mask);
+
+            TheMessageMaskedResultOf("test@sub.sub.sub.email.com")
                 .Should()
                 .Be(Mask);
         }
@@ -40,7 +56,11 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         [Fact]
         public void GivenEmailAddressInUrl_EntireStringIsMasked()
         {
-            TheMaskedResultOf("https://foo.com/api/1/some/endpoint?email=test@sub.sub.sub.email.com")
+            ThePropertyMaskedResultOf("anyPropertyName", "https://foo.com/api/1/some/endpoint?email=test@sub.sub.sub.email.com")
+                .Should()
+                .Be("https:" + Mask); // I don't even regex
+
+            TheMessageMaskedResultOf("https://foo.com/api/1/some/endpoint?email=test@sub.sub.sub.email.com")
                 .Should()
                 .Be("https:" + Mask); // I don't even regex
         }
@@ -48,7 +68,11 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         [Fact]
         public void GivenEmailAddressUrlEncoded_AddressIsMasked()
         {
-            TheMaskedResultOf("test%40email.com")
+            ThePropertyMaskedResultOf("anyPropertyName", "test%40email.com")
+                .Should()
+                .Be(Mask); // I don't even regex
+
+            TheMessageMaskedResultOf("test%40email.com")
                 .Should()
                 .Be(Mask); // I don't even regex
         }
@@ -72,9 +96,13 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         [InlineData(@"firstname-lastname@example.com")]
         public void GivenValidEmailAddress_AddressIsMasked(string email)
         {
-	        TheMaskedResultOf(email)
-		        .Should()
-		        .Be(Mask);
+            ThePropertyMaskedResultOf("anyPropertyName", email)
+                .Should()
+                .Be(Mask);
+
+            TheMessageMaskedResultOf(email)
+                .Should()
+                .Be(Mask);
         }
 
         [Theory]
@@ -90,9 +118,13 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         [InlineData("(),:;<>[\\]@example.com")]
         public void GivenInvalidEmailAddress_StringIsNotMasked(string toTest)
         {
-	        TheMaskedResultOf(toTest)
-		        .Should()
-		        .Be(toTest);
+            ThePropertyMaskedResultOf("anyPropertyName", toTest)
+                .Should()
+                .Be(toTest);
+
+            TheMessageMaskedResultOf(toTest)
+                .Should()
+                .Be(toTest);
         }
 
         [Theory]
@@ -106,17 +138,30 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         [InlineData("this\\ is\"really\"not\\allowed@example.com", "this\\ is\"really\"not\\{0}")]
         public void GivenInvalidEmailAddress_StringIsStillMasked(string toTest, string expectedMask)
         {
-	        TheMaskedResultOf(toTest)
-		        .Should()
-		        .Be(string.Format(expectedMask, Mask));
+            ThePropertyMaskedResultOf("anyPropertyName", toTest)
+                .Should()
+                .Be(string.Format(expectedMask, Mask));
+
+            TheMessageMaskedResultOf(toTest)
+                .Should()
+                .Be(string.Format(expectedMask, Mask));
         }
 
-        private static string TheMaskedResultOf(string input)
+        private static string TheMessageMaskedResultOf(string input)
         {
-            var maskingResult = new EmailAddressMaskingOperator().Mask(input, Mask);
+            var maskingResult = new EmailAddressMaskingOperator().MaskMessage(input, Mask);
 
-            return maskingResult.Match 
-                ? maskingResult.Result 
+            return maskingResult.Match
+                ? maskingResult.Result
+                : input;
+        }
+
+        private static string ThePropertyMaskedResultOf(string propertyName, string input)
+        {
+            var maskingResult = new EmailAddressMaskingOperator().MaskProperty(propertyName, input, Mask);
+
+            return maskingResult.Match
+                ? maskingResult.Result
                 : input;
         }
     }
