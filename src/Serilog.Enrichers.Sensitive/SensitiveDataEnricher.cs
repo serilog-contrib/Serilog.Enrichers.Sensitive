@@ -344,7 +344,8 @@ namespace Serilog.Enrichers.Sensitive
         {
             new EmailAddressMaskingOperator(),
             new IbanMaskingOperator(),
-            new CreditCardMaskingOperator()
+            new CreditCardMaskingOperator(),
+            new PathMaskingOperator()
         };
 
     }
