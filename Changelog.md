@@ -1,5 +1,9 @@
 # Changelog for Serilog.Enrichers.Sensitive
 
+## 1.7.4
+
+- Add masking options for properties [#29](https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/issues/29)
+
 ## 1.7.3
 
 - Add support for masking property values that contain a `Uri`, reported by @yadanilov19

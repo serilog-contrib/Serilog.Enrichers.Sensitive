@@ -1,4 +1,4 @@
-# Serilog.Enrichers.Sensitive
+    # Serilog.Enrichers.Sensitive
 
 [![build-and-test](https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/actions/workflows/dotnet.yml/badge.svg)](https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/actions/workflows/dotnet.yml) [![release](https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/actions/workflows/release.yml/badge.svg)](https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/actions/workflows/release.yml) [![NuGet Serilog.Enrichers.Sensitive](https://buildstats.info/nuget/Serilog.Enrichers.Sensitive)](https://www.nuget.org/packages/Serilog.Enrichers.Sensitive/)
 
@@ -170,6 +170,27 @@ public class CustomizedEmailAddressMaskingOperator : EmailAddressMaskingOperator
 When the mask is `***MASKED***` and we pass in `james.bond@universalexports.co.uk` the result will be `***MASKED***@universalexports.co.uk`.
 
 Note that this example uses `EmailAddressMaskingOperator` which has a fairly complex regular expression. If possible change your regular expression to have match groups so you can more easily access them through the `match` parameter.
+
+#### Partially mask a value
+
+Similar to the previous example you might want to only mask part of the value. Using `MaskOptions` you can specify:
+
+- To show the first `n` characters and mask the rest (using `ShowFirst`)
+- To show the last `n` characters and mask the rest (using `ShowLast`)
+- To preserve the length of the original value (using `PreserveLength`)
+
+The [`WhenMaskingWithOptions`](https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/blob/master/test/Serilog.Enrichers.Sensitive.Tests.Unit/WhenMaskingWithOptions.cs) test has examples of how the options work.
+
+#### Partially mask a URI
+
+When it comes to URIs you may want to mask only a very specific part of the URI and keep te rest visible. To support that you can use the `UriMaskOptions` to control which parts of the URI are _kept_:
+
+- `ShowScheme`
+- `ShowHost`
+- `ShowPath`
+- `ShowQueryString`
+
+By default every part of the URI will be masked. 
 
 ### Always mask a property
 
