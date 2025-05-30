@@ -88,7 +88,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
         {
         }
 
-        protected override string PreprocessInput(string input)
+        protected override string PreprocessInput(string input, string? logPropertyName = null)
         {
             return input;
         }

@@ -21,7 +21,7 @@ namespace Serilog.Enrichers.Sensitive
         private readonly MaskPropertyCollection _maskProperties;
         private readonly List<string> _excludeProperties;
 
-        public SensitiveDataEnricher(SensitiveDataEnricherOptions options) 
+        public SensitiveDataEnricher(SensitiveDataEnricherOptions options)
             : this(options.Apply)
         {
         }
@@ -30,8 +30,8 @@ namespace Serilog.Enrichers.Sensitive
             Action<SensitiveDataEnricherOptions>? options)
         {
             var enricherOptions = new SensitiveDataEnricherOptions(
-                MaskingMode.Globally, 
-                DefaultMaskValue, 
+                MaskingMode.Globally,
+                DefaultMaskValue,
                 DefaultOperators.Select(o => o.GetType().AssemblyQualifiedName),
                 new List<string>(),
                 new List<string>());
@@ -55,7 +55,7 @@ namespace Serilog.Enrichers.Sensitive
             var fields = typeof(LogEvent).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
 
             var backingField = fields.SingleOrDefault(f => f.Name.Contains("<MessageTemplate>"));
-            
+
             if (backingField == null)
             {
                 throw new InvalidOperationException(
@@ -114,7 +114,7 @@ namespace Serilog.Enrichers.Sensitive
                 return (false, null);
             }
 
-            if(_maskProperties.TryGetProperty(property.Key, out var options))
+            if (_maskProperties.TryGetProperty(property.Key, out var options))
             {
                 if (options == MaskOptions.Default)
                 {
@@ -136,7 +136,7 @@ namespace Serilog.Enrichers.Sensitive
             {
                 case ScalarValue { Value: string stringValue }:
                     {
-                        var (wasMasked, maskedValue) = ReplaceSensitiveDataFromString(stringValue);
+                        var (wasMasked, maskedValue) = ReplaceSensitiveDataFromString(stringValue, property.Key);
 
                         if (wasMasked)
                         {
@@ -150,23 +150,23 @@ namespace Serilog.Enrichers.Sensitive
                 // which is why this needs special handling and isn't
                 // caught by the string value above.
                 case ScalarValue { Value: Uri uriValue }:
-                {
-                    var (wasMasked, maskedValue) = ReplaceSensitiveDataFromString(uriValue.ToString());
-
-                    if (wasMasked)
                     {
-                        return (true, new ScalarValue(new Uri(maskedValue)));
-                    }
+                        var (wasMasked, maskedValue) = ReplaceSensitiveDataFromString(uriValue.ToString(), property.Key);
 
-                    return (false, null);
-                }
+                        if (wasMasked)
+                        {
+                            return (true, new ScalarValue(new Uri(maskedValue)));
+                        }
+
+                        return (false, null);
+                    }
                 case SequenceValue sequenceValue:
                     var resultElements = new List<LogEventPropertyValue>();
                     var anyElementMasked = false;
                     foreach (var element in sequenceValue.Elements)
                     {
                         var (wasElementMasked, elementResult) = MaskProperty(new KeyValuePair<string, LogEventPropertyValue>(property.Key, element));
-                        
+
                         if (wasElementMasked)
                         {
                             resultElements.Add(elementResult!);
@@ -201,27 +201,27 @@ namespace Serilog.Enrichers.Sensitive
                         return (anyMasked, new StructureValue(propList));
                     }
                 case DictionaryValue dictionaryValue:
-                {
-                    var resultDictionary = new List<KeyValuePair<ScalarValue, LogEventPropertyValue>>();
-                    var anyKeyMasked = false;
-
-                    foreach (var pair in dictionaryValue.Elements)
                     {
-                        var (wasPairMasked, pairResult) = MaskProperty(new KeyValuePair<string, LogEventPropertyValue>(pair.Key.Value as string, pair.Value));
+                        var resultDictionary = new List<KeyValuePair<ScalarValue, LogEventPropertyValue>>();
+                        var anyKeyMasked = false;
 
-                        if (wasPairMasked)
+                        foreach (var pair in dictionaryValue.Elements)
                         {
-                            resultDictionary.Add(new KeyValuePair<ScalarValue, LogEventPropertyValue>(pair.Key, pairResult));
-                            anyKeyMasked = true;
+                            var (wasPairMasked, pairResult) = MaskProperty(new KeyValuePair<string, LogEventPropertyValue>(pair.Key.Value as string, pair.Value));
+
+                            if (wasPairMasked)
+                            {
+                                resultDictionary.Add(new KeyValuePair<ScalarValue, LogEventPropertyValue>(pair.Key, pairResult));
+                                anyKeyMasked = true;
+                            }
+                            else
+                            {
+                                resultDictionary.Add(new KeyValuePair<ScalarValue, LogEventPropertyValue>(pair.Key, pair.Value));
+                            }
                         }
-                        else
-                        {
-                            resultDictionary.Add(new KeyValuePair<ScalarValue, LogEventPropertyValue>(pair.Key, pair.Value));
-                        }
+
+                        return (anyKeyMasked, new DictionaryValue(resultDictionary));
                     }
-
-                    return (anyKeyMasked, new DictionaryValue(resultDictionary));
-                }
                 default:
                     return (false, null);
             }
@@ -315,20 +315,23 @@ namespace Serilog.Enrichers.Sensitive
                 {
                     return input.Substring(0, start).PadRight(pad, '*') + input.Substring(end);
                 }
-                
+
                 return input.Substring(0, start) + DefaultMaskPad + input.Substring(end);
             }
 
             return maskValue;
         }
 
-        private (bool, string) ReplaceSensitiveDataFromString(string input)
+        private (bool, string) ReplaceSensitiveDataFromString(string input, string? propertyName = null)
         {
             var isMasked = false;
 
             foreach (var maskingOperator in _maskingOperators)
             {
-                var maskResult = maskingOperator.Mask(input, _maskValue);
+
+                var maskResult = string.IsNullOrWhiteSpace(propertyName)
+                    ? maskingOperator.MaskMessage(input, _maskValue)
+                    : maskingOperator.MaskProperty(propertyName!, input, _maskValue);
 
                 if (maskResult.Match)
                 {

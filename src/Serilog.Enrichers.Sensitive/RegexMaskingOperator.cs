@@ -10,8 +10,8 @@ namespace Serilog.Enrichers.Sensitive
 	{
 		private readonly Regex _regex;
 
-		protected RegexMaskingOperator(string regexString) 
-            : this(regexString, RegexOptions.Compiled)
+		protected RegexMaskingOperator(string regexString)
+			: this(regexString, RegexOptions.Compiled)
 		{
 		}
 
@@ -25,7 +25,36 @@ namespace Serilog.Enrichers.Sensitive
 			}
 		}
 
-		public MaskingResult Mask(string input, string mask)
+		public MaskingResult MaskProperty(string propertyName, string input, string mask)
+		{
+			var preprocessedInput = PreprocessInput(input, propertyName);
+
+			if (!ShouldMaskInput(preprocessedInput, propertyName))
+			{
+				return MaskingResult.NoMatch;
+			}
+
+			var maskedResult = _regex.Replace(preprocessedInput, match =>
+			{
+				if (ShouldMaskMatch(match))
+				{
+					return match.Result(PreprocessMask(PreprocessMask(mask), match));
+				}
+
+				return match.Value;
+			});
+
+			var result = new MaskingResult
+			{
+				Result = maskedResult,
+				Match = maskedResult != input
+			};
+
+			return result;
+		}
+
+		public MaskingResult MaskMessage(string input, string mask)
+
 		{
 			var preprocessedInput = PreprocessInput(input);
 
@@ -34,16 +63,16 @@ namespace Serilog.Enrichers.Sensitive
 				return MaskingResult.NoMatch;
 			}
 
-            var maskedResult = _regex.Replace(preprocessedInput, match =>
-            {
-                if (ShouldMaskMatch(match))
-                {
-                    return match.Result(PreprocessMask(PreprocessMask(mask), match));
-                }
+			var maskedResult = _regex.Replace(preprocessedInput, match =>
+			{
+				if (ShouldMaskMatch(match))
+				{
+					return match.Result(PreprocessMask(PreprocessMask(mask), match));
+				}
 
-                return match.Value;
-            });
-			
+				return match.Value;
+			});
+
 			var result = new MaskingResult
 			{
 				Result = maskedResult,
@@ -59,37 +88,37 @@ namespace Serilog.Enrichers.Sensitive
 		/// <param name="input">The message template or the value of a property on the log event</param>
 		/// <returns><c>true</c> when the input should be masked, otherwise <c>false</c>. Defaults to <c>true</c></returns>
 		/// <remarks>This method provides an extension point to short-circuit the masking operation before the regular expression matching is performed</remarks>
-		protected virtual bool ShouldMaskInput(string input) => true;
+		protected virtual bool ShouldMaskInput(string input, string? propertyName = null) => true;
 
 		/// <summary>
 		/// Perform any operations on the input value before masking the input
 		/// </summary>
-        /// <param name="input">The message template or the value of a property on the log event</param>
+		/// <param name="input">The message template or the value of a property on the log event</param>
 		/// <returns>The processed input, defaults to no pre-processing and returns the input</returns>
 		/// <remarks>Use this method if the input is encoded using URL encoding for example</remarks>
-		protected virtual string PreprocessInput(string input) => input;
+		protected virtual string PreprocessInput(string input, string? propertyName = null) => input;
 
 		/// <summary>
 		/// Perform any operations on the mask before masking the matched value
 		/// </summary>
 		/// <param name="mask">The mask value as specified on the <see cref="SensitiveDataEnricherOptions"/></param>
-        /// <returns>The processed mask, defaults to no pre-processing and returns the input</returns>
+		/// <returns>The processed mask, defaults to no pre-processing and returns the input</returns>
 		protected virtual string PreprocessMask(string mask) => mask;
 
-        /// <summary>
-        /// Perform any operations on the mask before masking the matched value
-        /// </summary>
-        /// <param name="mask">The mask value as specified on the <see cref="SensitiveDataEnricherOptions"/></param>
-        /// <param name="match">The regex match</param>
-        /// <returns>The processed mask, defaults to no pre-processing and returns the input</returns>
-        protected virtual string PreprocessMask(string mask, Match match) => mask;
+		/// <summary>
+		/// Perform any operations on the mask before masking the matched value
+		/// </summary>
+		/// <param name="mask">The mask value as specified on the <see cref="SensitiveDataEnricherOptions"/></param>
+		/// <param name="match">The regex match</param>
+		/// <returns>The processed mask, defaults to no pre-processing and returns the input</returns>
+		protected virtual string PreprocessMask(string mask, Match match) => mask;
 
 		/// <summary>
 		/// Indicate whether the operator should continue with masking the matched value from the input
 		/// </summary>
 		/// <param name="match">The match found by the regular expression of this operator</param>
-        /// <returns><c>true</c> when the match should be masked, otherwise <c>false</c>. Defaults to <c>true</c></returns>
-        /// <remarks>This method provides an extension point to short-circuit the masking operation if the value matches the regular expression but does not satisfy some additional criteria</remarks>
-        protected virtual bool ShouldMaskMatch(Match match) => true;
-    }
+		/// <returns><c>true</c> when the match should be masked, otherwise <c>false</c>. Defaults to <c>true</c></returns>
+		/// <remarks>This method provides an extension point to short-circuit the masking operation if the value matches the regular expression but does not satisfy some additional criteria</remarks>
+		protected virtual bool ShouldMaskMatch(Match match) => true;
+	}
 }

@@ -72,4 +72,14 @@ public class MyTestMaskingOperator : IMaskingOperator
             Result = mask
         };
     }
+
+    public MaskingResult MaskProperty(string propertyName, string input, string mask)
+    {
+        return Mask(input, mask);
+    }
+
+    public MaskingResult MaskMessage(string input, string mask)
+    {
+        return Mask(input, mask);
+    }
 }
