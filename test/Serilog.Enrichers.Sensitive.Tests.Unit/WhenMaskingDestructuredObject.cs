@@ -24,7 +24,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
                 .Enrich.WithSensitiveDataMasking(options =>
                 {
                     options.MaskingOperators = new List<IMaskingOperator> { new EmailAddressMaskingOperator() };
-                    options.MaskProperties.Add("SensitiveProperty");
+                    options.MaskProperties.Add(MaskProperty.WithDefaults("SensitiveProperty"));
                 })
                 .CreateLogger();
         }

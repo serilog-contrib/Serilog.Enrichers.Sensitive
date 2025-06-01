@@ -14,7 +14,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
             var logger =  new LoggerConfiguration()
                 .Enrich.WithSensitiveDataMasking(options =>
                 {
-                    options.MaskProperties.Add("Email");
+                    options.MaskProperties.Add(MaskProperty.WithDefaults("Email"));
                 })
                 .WriteTo.Sink(inMemorySink)
                 .CreateLogger();
@@ -38,7 +38,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
             var logger =  new LoggerConfiguration()
                 .Enrich.WithSensitiveDataMasking(options =>
                 {
-                    options.MaskProperties.Add("Email");
+                    options.MaskProperties.Add(MaskProperty.WithDefaults("Email"));
                 })
                 .WriteTo.Sink(inMemorySink)
                 .CreateLogger();
@@ -86,7 +86,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
             var logger =  new LoggerConfiguration()
                 .Enrich.WithSensitiveDataMasking(options =>
                 {
-                    options.MaskProperties.Add("Email");
+                    options.MaskProperties.Add(MaskProperty.WithDefaults("Email"));
                     options.ExcludeProperties.Add("Email");
                 })
                 .WriteTo.Sink(inMemorySink)

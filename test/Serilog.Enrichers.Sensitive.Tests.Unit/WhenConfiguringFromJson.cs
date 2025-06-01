@@ -52,6 +52,30 @@ public class WhenConfiguringFromJson
             .WithProperty("secret")
             .WithValue("**SECRET**");
     }
+
+    [Fact]
+    public void GivenMaskPropertyWithSpecificOptions_OptionsAreApplied()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddJsonFile("enricher-config.json")
+            .Build();
+
+        var inMemorySink = new InMemorySink();
+
+        var logger = new LoggerConfiguration()
+            .ReadFrom.Configuration(configuration)
+            .WriteTo.Sink(inMemorySink)
+            .CreateLogger();
+
+        logger.Information("A test message {propwithoptions}", "1234567890");
+
+        inMemorySink
+            .Should()
+            .HaveMessage("A test message {propwithoptions}")
+            .Appearing().Once()
+            .WithProperty("propwithoptions")
+            .WithValue("123*******");
+    }
 }
 
 public class MyTestMaskingOperator : IMaskingOperator

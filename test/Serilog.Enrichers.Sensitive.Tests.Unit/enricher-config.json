@@ -10,7 +10,12 @@
           "options": {
             "MaskValue": "**SECRET**",
             "MaskProperties": [
-              "secret"
+              { "Name": "secret"},
+              { "Name": "propwithoptions",
+                "Options": {
+                  "ShowFirst": 3
+                }
+              }
             ]
           }
         }

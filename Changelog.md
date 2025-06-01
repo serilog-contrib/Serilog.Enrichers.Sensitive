@@ -1,5 +1,10 @@
 # Changelog for Serilog.Enrichers.Sensitive
 
+## 2.0.0
+
+This release introduces support for configuring `MaskProperties` via JSON. As the version number indicates this is a breaking change as the C# equivalent had to be changed to match.
+See the [README](README.md) for more details on configuring specific property masking options. 
+
 ## 1.7.4
 
 - Add masking options for properties [#29](https://github.com/serilog-contrib/Serilog.Enrichers.Sensitive/issues/29)

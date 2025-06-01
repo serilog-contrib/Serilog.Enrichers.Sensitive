@@ -18,7 +18,7 @@ namespace Serilog.Enrichers.Sensitive
         private readonly FieldInfo _messageTemplateBackingField;
         private readonly List<IMaskingOperator> _maskingOperators;
         private readonly string _maskValue;
-        private readonly MaskPropertyCollection _maskProperties;
+        private readonly List<MaskProperty> _maskProperties;
         private readonly List<string> _excludeProperties;
 
         public SensitiveDataEnricher(SensitiveDataEnricherOptions options) 
@@ -33,7 +33,7 @@ namespace Serilog.Enrichers.Sensitive
                 MaskingMode.Globally, 
                 DefaultMaskValue, 
                 DefaultOperators.Select(o => o.GetType().AssemblyQualifiedName),
-                new List<string>(),
+                _maskProperties,
                 new List<string>());
 
             if (options != null)
@@ -114,9 +114,10 @@ namespace Serilog.Enrichers.Sensitive
                 return (false, null);
             }
 
-            if(_maskProperties.TryGetProperty(property.Key, out var options))
+            var matchingProperty = _maskProperties.SingleOrDefault(p => p.Name.Equals(property.Key, StringComparison.OrdinalIgnoreCase));
+            if(matchingProperty != null)
             {
-                if (options == MaskOptions.Default)
+                if (matchingProperty.Options == MaskOptions.Default)
                 {
                     return (true, new ScalarValue(_maskValue));
                 }
@@ -124,11 +125,11 @@ namespace Serilog.Enrichers.Sensitive
                 switch (property.Value)
                 {
                     case ScalarValue { Value: string stringValue }:
-                        return (true, new ScalarValue(MaskWithOptions(_maskValue, options, stringValue)));
-                    case ScalarValue { Value: Uri uriValue } when options is UriMaskOptions uriMaskOptions:
+                        return (true, new ScalarValue(MaskWithOptions(_maskValue, matchingProperty.Options, stringValue)));
+                    case ScalarValue { Value: Uri uriValue } when matchingProperty.Options is UriMaskOptions uriMaskOptions:
                         return (true, new ScalarValue(MaskWithUriOptions(_maskValue, uriMaskOptions, uriValue)));
                     case ScalarValue { Value: Uri uriValue }:
-                        return (true, new ScalarValue(MaskWithOptions(_maskValue, options, uriValue.ToString())));
+                        return (true, new ScalarValue(MaskWithOptions(_maskValue, matchingProperty.Options, uriValue.ToString())));
                 }
             }
 
