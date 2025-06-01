@@ -25,7 +25,7 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
             var inMemorySink = new InMemorySink();
             var logger = new LoggerConfiguration()
                 .Enrich.WithSensitiveDataMasking(
-                    options => options.MaskProperties.Add("Prop", new MaskOptions{ ShowFirst = showFirst, ShowLast = showLast, PreserveLength = preserveLength}))
+                    options => options.MaskProperties.Add(new MaskProperty { Name = "Prop", Options = new MaskOptions{ ShowFirst = showFirst, ShowLast = showLast, PreserveLength = preserveLength}}))
                 .WriteTo.Sink(inMemorySink)
                 .CreateLogger();
 
@@ -52,13 +52,13 @@ namespace Serilog.Enrichers.Sensitive.Tests.Unit
             var inMemorySink = new InMemorySink();
             var logger = new LoggerConfiguration()
                 .Enrich.WithSensitiveDataMasking(
-                    options => options.MaskProperties.Add("Prop", new UriMaskOptions
+                    options => options.MaskProperties.Add(new MaskProperty { Name ="Prop", Options = new UriMaskOptions
                     {
                         ShowScheme  = showScheme,
                         ShowHost = showHost,
                         ShowPath = showPath,
                         ShowQueryString = showQuery
-                    }))
+                    }}))
                 .WriteTo.Sink(inMemorySink)
                 .CreateLogger();
 

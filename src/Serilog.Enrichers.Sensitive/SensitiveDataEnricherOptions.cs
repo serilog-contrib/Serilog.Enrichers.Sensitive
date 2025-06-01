@@ -18,7 +18,7 @@ namespace Serilog.Enrichers.Sensitive
             MaskingMode mode = MaskingMode.Globally, 
             string maskValue = SensitiveDataEnricher.DefaultMaskValue, 
             IEnumerable<string>? maskingOperators = null,
-            string? maskProperties = null, 
+            List<MaskProperty>? maskProperties = null, 
             IEnumerable<string>? excludeProperties = null,
             // ReSharper disable once UnusedParameter.Local as this only exists to support JSON configuration, see the Operators property below 
             IEnumerable<string>? operators = null)
@@ -26,7 +26,7 @@ namespace Serilog.Enrichers.Sensitive
             Mode = mode;
             MaskValue = maskValue;
             MaskingOperators = maskingOperators == null ? new List<IMaskingOperator>() : ResolveMaskingOperators(maskingOperators);
-            MaskProperties = maskProperties == null ? new MaskPropertyCollection() : MaskPropertyCollection.From(maskProperties?.Split(',') ?? []);
+            MaskProperties = maskProperties == null ? new List<MaskProperty>() : maskProperties.ToList();
             ExcludeProperties = excludeProperties?.ToList() ?? new List<string>();
         }
 
@@ -90,7 +90,7 @@ namespace Serilog.Enrichers.Sensitive
         /// The list of properties that should always be masked regardless of whether they match the pattern of any of the masking operators
         /// </summary>
         /// <remarks>The property name is case-insensitive, when the property is present on the log message it will always be masked even if it is empty</remarks>
-        public MaskPropertyCollection MaskProperties { get; set; } = new();
+        public List<MaskProperty> MaskProperties { get; set; } = new();
         /// <summary>
         /// The list of properties that should never be masked
         /// </summary>

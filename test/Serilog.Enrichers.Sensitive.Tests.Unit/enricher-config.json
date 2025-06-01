@@ -9,7 +9,14 @@
         "Args": {
           "options": {
             "MaskValue": "**SECRET**",
-            "MaskProperties": "secret"
+            "MaskProperties": [
+              { "Name": "secret"},
+              { "Name": "propwithoptions",
+                "Options": {
+                  "ShowFirst": 3
+                }
+              }
+            ]
           }
         }
       }
