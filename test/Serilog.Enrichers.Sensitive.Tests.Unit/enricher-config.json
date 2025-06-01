@@ -9,9 +9,7 @@
         "Args": {
           "options": {
             "MaskValue": "**SECRET**",
-            "MaskProperties": [
-              "secret"
-            ]
+            "MaskProperties": "secret"
           }
         }
       }

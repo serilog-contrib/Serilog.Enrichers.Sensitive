@@ -1,8 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 
 namespace Serilog.Enrichers.Sensitive;
 
-public class MaskPropertyCollection : List<MaskProperty>
+public class MaskPropertyCollection : IEnumerable<string>
 {
     private readonly Dictionary<string, MaskOptions> _properties = new();
 
@@ -31,5 +32,15 @@ public class MaskPropertyCollection : List<MaskProperty>
         }
 
         return collection;
+    }
+
+    public IEnumerator<string> GetEnumerator()
+    {
+        return _properties.Keys.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }

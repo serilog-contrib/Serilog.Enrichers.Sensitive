@@ -33,7 +33,7 @@ namespace Serilog.Enrichers.Sensitive
                 MaskingMode.Globally, 
                 DefaultMaskValue, 
                 DefaultOperators.Select(o => o.GetType().AssemblyQualifiedName),
-                new List<string>(),
+                _maskProperties != null ? string.Join(",", _maskProperties) : null,
                 new List<string>());
 
             if (options != null)

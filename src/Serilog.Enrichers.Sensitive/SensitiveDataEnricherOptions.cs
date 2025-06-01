@@ -18,7 +18,7 @@ namespace Serilog.Enrichers.Sensitive
             MaskingMode mode = MaskingMode.Globally, 
             string maskValue = SensitiveDataEnricher.DefaultMaskValue, 
             IEnumerable<string>? maskingOperators = null,
-            IEnumerable<string>? maskProperties = null, 
+            string? maskProperties = null, 
             IEnumerable<string>? excludeProperties = null,
             // ReSharper disable once UnusedParameter.Local as this only exists to support JSON configuration, see the Operators property below 
             IEnumerable<string>? operators = null)
@@ -26,7 +26,7 @@ namespace Serilog.Enrichers.Sensitive
             Mode = mode;
             MaskValue = maskValue;
             MaskingOperators = maskingOperators == null ? new List<IMaskingOperator>() : ResolveMaskingOperators(maskingOperators);
-            MaskProperties = maskProperties == null ? new MaskPropertyCollection() : MaskPropertyCollection.From(maskProperties);
+            MaskProperties = maskProperties == null ? new MaskPropertyCollection() : MaskPropertyCollection.From(maskProperties?.Split(',') ?? []);
             ExcludeProperties = excludeProperties?.ToList() ?? new List<string>();
         }
 
@@ -129,20 +129,5 @@ namespace Serilog.Enrichers.Sensitive
             other.ExcludeProperties = ExcludeProperties;
             other.Operators = Operators;
         }
-    }
-
-    public class MaskProperty
-    {
-        public MaskProperty()
-        {
-        }
-
-        public MaskProperty(string propertyName)
-        {
-            Name = propertyName;
-        }
-
-        public string Name { get; set; }
-        public MaskOptions Options { get; set; } = MaskOptions.Default;
     }
 }
