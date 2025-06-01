@@ -318,3 +318,66 @@ An example config file:
 ```
 
 > **Warning:** Contrary to what you might expect, for JSON configuration `Operators` should be used instead of `MaskingOperators`.
+
+### Masking specific properties
+
+You can configure specific options for property masking via the `MaskProperties` property via code as well as JSON. 
+
+From code:
+
+```csharp
+var logger =  new LoggerConfiguration()
+    .Enrich.WithSensitiveDataMasking(options =>
+    {
+        options.MaskProperties.Add(MaskProperty.WithDefaults("Email"));
+    })
+    .WriteTo.Sink(inMemorySink)
+    .CreateLogger();
+```
+
+Here we're using `MaskProperty.WithDefaults()` to indicate we just want to mask the `Email` property. You can specify more options like so:
+
+```csharp
+var logger =  new LoggerConfiguration()
+    .Enrich.WithSensitiveDataMasking(options =>
+    {
+        options.MaskProperties.Add(new MaskProperty 
+        { 
+            Name = "Email",
+            Options = new MaskOptions {
+                ShowFirst = 3
+            }
+        });
+    })
+    .WriteTo.Sink(inMemorySink)
+    .CreateLogger();
+```
+
+Via JSON configuration (for example `appsettings.json`) you can follow a similar approach:
+
+```json
+{
+  "Serilog": {
+    "Using": [
+      "Serilog.Enrichers.Sensitive"
+    ],
+    "Enrich": [
+      {
+        "Name": "WithSensitiveDataMasking",
+        "Args": {
+          "options": {
+            "MaskProperties": [
+              {
+                "Name": "someproperty",
+                "Options": {
+                  "ShowFirst": 3
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }
+}
+```
