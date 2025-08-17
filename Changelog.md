@@ -1,5 +1,10 @@
 # Changelog for Serilog.Enrichers.Sensitive
 
+## 2.1.0
+
+Add support for wildcard matching on properties to mask.
+See [here](README.md#wildcard-matching-properties) for usage details.
+
 ## 2.0.0
 
 This release introduces support for configuring `MaskProperties` via JSON. As the version number indicates this is a breaking change as the C# equivalent had to be changed to match.

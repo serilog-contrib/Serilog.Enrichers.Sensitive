@@ -1,6 +1,6 @@
 <Project>
 	<PropertyGroup>
-		<Version>2.0.0.0</Version>
+		<Version>2.1.0.0</Version>
 		<Authors>Sander van Vliet, Huibert Jan Nieuwkamer, Scott Toberman</Authors>
 		<Company>Codenizer BV</Company>
 		<Copyright>2025 Sander van Vliet</Copyright>

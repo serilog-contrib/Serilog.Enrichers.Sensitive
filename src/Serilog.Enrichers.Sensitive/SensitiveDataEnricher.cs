@@ -114,10 +114,10 @@ namespace Serilog.Enrichers.Sensitive
                 return (false, null);
             }
 
-            var matchingProperty = _maskProperties.SingleOrDefault(p => p.Name.Equals(property.Key, StringComparison.OrdinalIgnoreCase));
+            var matchingProperty = _maskProperties.SingleOrDefault(p => p.IsMatch(property.Key));
             if(matchingProperty != null)
             {
-                if (matchingProperty.Options == MaskOptions.Default)
+                if (matchingProperty.Options.Equals(MaskOptions.Default))
                 {
                     return (true, new ScalarValue(_maskValue));
                 }

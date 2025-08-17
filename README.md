@@ -234,6 +234,37 @@ logger.Information("This is a sensitive {Email}", "user@example.com");
 
 the rendered log message comes out as: `"This is a sensitive user@example.com"`
 
+### Wildcard matching properties
+
+You can specify a wildcard to match property names to mask. Supported forms are:
+
+- `*Prop`
+- `Prop*`
+- `*Prop*`
+
+Note that `Pr*p` is explicitly not supported.
+
+When you want to use a wildcard you will have to set the `WildcardMatch` property on `MaskOptions` to true:
+
+```csharp
+var logger = new LoggerConfiguration()
+    .Enrich.WithSensitiveDataMasking(
+        options => options
+            .MaskProperties
+            .Add(new MaskProperty 
+            {
+                Name = "*Prop",
+                Options = new MaskOptions 
+                {
+                    WildcardMatch = true
+                }
+            }))
+    .WriteTo.Sink(inMemorySink)
+    .CreateLogger();
+```
+
+If you do not set `WildcardMatch` then the property name will be treated as-is and only mask a property called `*Prop`. 
+Note that you will not get any error in this scenario.
 
 ## Extending to additional use cases
 

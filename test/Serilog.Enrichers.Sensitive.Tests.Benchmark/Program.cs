@@ -6,9 +6,10 @@ namespace Serilog.Enrichers.Sensitive.Tests.Benchmark
     {
         private static void Main(string[] args)
         {
-            BenchmarkRunner.Run<BenchmarkCompiledEmailRegex>();
-            BenchmarkRunner.Run<BenchmarkCompiledIbanRegex>();
-            BenchmarkRunner.Run<CreditCardMarkingBenchmarks>();
+            // BenchmarkRunner.Run<BenchmarkCompiledEmailRegex>();
+            // BenchmarkRunner.Run<BenchmarkCompiledIbanRegex>();
+            // BenchmarkRunner.Run<CreditCardMarkingBenchmarks>();
+            BenchmarkRunner.Run<BenchmarkWildcardPropertyMatch>();
         }
     }
 }
