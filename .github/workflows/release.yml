@@ -20,6 +20,13 @@ jobs:
       with:
         ref: ${{ inputs.tag != '' && inputs.tag || github.ref }}
 
+    - name: Setup dotnet
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: |
+          6.0.x
+          8.0.x
+
     - name: Get the version
       id: get_version
       uses: mavrosxristoforos/get-xml-info@1.0
