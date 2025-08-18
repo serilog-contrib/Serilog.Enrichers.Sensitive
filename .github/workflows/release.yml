@@ -33,45 +33,43 @@ jobs:
       with:
         xml-file: './Directory.Build.props'
         xpath: '//Version'
+    
     - name: Create short version
       id: shortversion
       run: |
         $version = "${{ steps.get_version.outputs.info }}".Substring(0, "${{ steps.get_version.outputs.info }}".LastIndexOf("."))
         Write-Host "::set-output name=shortversion::$version"
       shell: pwsh
+    
     - name: Restore dependencies
       run: dotnet restore
+    
     - name: Build
       run: dotnet build --no-restore -c Release .\Serilog.Enrichers.Sensitive.sln
+    
     - name: Test
       run: dotnet test --no-build --verbosity normal -c Release
+    
     - name: Create NuGet package for Serilog.Enrichers.Sensitive
       run: dotnet pack ./src/Serilog.Enrichers.Sensitive/Serilog.Enrichers.Sensitive.csproj -c Release --no-build --no-restore -o ./packaging
+    
     - name: Get changelog
       id: get_changelog
       run: |
           ./get-changelog.ps1 -currentVersion "${{ steps.shortversion.outputs.shortversion }}"
       shell: pwsh
+    
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: softprops/action-gh-release@v2
       with:
+        files: ./packaging/Serilog.Enrichers.Sensitive.${{ steps.shortversion.outputs.shortversion }}.nupkg
         tag_name: ${{ steps.get_version.outputs.info }}
-        release_name: ${{ steps.get_version.outputs.info }}
+        name: ${{ steps.get_version.outputs.info }}
         draft: false
         prerelease: false
         body_path: ./version-changelog.md
-    - name: Upload enricher NuGet package
-      id: upload-nuget-enricher
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-        asset_path: ./packaging/Serilog.Enrichers.Sensitive.${{ steps.shortversion.outputs.shortversion }}.nupkg
-        asset_name: Serilog.Enrichers.Sensitive.${{ steps.shortversion.outputs.shortversion }}.nupkg
-        asset_content_type: application/octet-stream
+        make_latest: true
+    
     - name: Publish enricher package to public NuGet repository
       run: dotnet nuget push -k ${{ secrets.NUGET_TOKEN }} -s https://api.nuget.org/v3/index.json ./packaging/Serilog.Enrichers.Sensitive.${{ steps.shortversion.outputs.shortversion }}.nupkg --skip-duplicate --no-symbols
