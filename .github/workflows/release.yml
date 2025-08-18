@@ -45,7 +45,7 @@ jobs:
       run: dotnet restore
     
     - name: Build
-      run: dotnet build --no-restore -c Release .\Serilog.Enrichers.Sensitive.sln
+      run: dotnet build --no-restore -c Release ./Serilog.Enrichers.Sensitive.sln
     
     - name: Test
       run: dotnet test --no-build --verbosity normal -c Release
